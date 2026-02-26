@@ -175,7 +175,7 @@ def main() -> None:
 
         elif args.command == "visualize":
             from .visualization import generate_html
-            html_path = repo_root / ".code-review-graph.html"
+            html_path = repo_root / ".code-review-graph" / "graph.html"
             generate_html(store, html_path)
             print(f"Visualization: {html_path}")
             print("Open in browser to explore your codebase graph.")

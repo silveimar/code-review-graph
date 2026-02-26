@@ -4,7 +4,7 @@
 
 **Privacy:**
 - Zero telemetry
-- All graph data stored locally in `.code-review-graph.db`
+- All graph data stored locally in `.code-review-graph/graph.db`
 - No network calls during normal operation
 - Optional embeddings model downloaded once from HuggingFace (when using `[embeddings]` extra)
 

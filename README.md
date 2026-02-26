@@ -7,7 +7,7 @@
 [![CI](https://github.com/tirth8205/code-review-graph/actions/workflows/ci.yml/badge.svg)](https://github.com/tirth8205/code-review-graph/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg?style=flat-square)](https://www.python.org/)
 [![MCP](https://img.shields.io/badge/MCP-compatible-green.svg?style=flat-square)](https://modelcontextprotocol.io/)
-[![v1.4.0](https://img.shields.io/badge/version-1.4.0-purple.svg?style=flat-square)](#)
+[![v1.5.0](https://img.shields.io/badge/version-1.5.0-purple.svg?style=flat-square)](#)
 
 ---
 
@@ -32,7 +32,7 @@ Stop re-scanning your entire codebase on every review. `code-review-graph` build
 - **Token-efficient reviews** — Send only changed + impacted code to the model, not your entire repo
 - **Auto-update hooks** — Graph stays current on every file edit and git commit
 - **Vector embeddings** — Optional semantic search across your codebase with sentence-transformers
-- **Interactive visualization** — Generate an HTML graph of your codebase, explore in browser
+- **Interactive visualization** — Collapsible, searchable HTML graph with edge-type toggles
 - **Watch mode** — Real-time graph updates as you code
 
 For the full feature list and changelog, see [docs/FEATURES.md](docs/FEATURES.md).

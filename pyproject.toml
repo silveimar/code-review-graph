@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "code-review-graph"
-version = "1.4.0"
+version = "1.5.0"
 description = "Persistent incremental knowledge graph for token-efficient, context-aware code reviews with Claude Code"
 readme = {file = "README.md", content-type = "text/markdown"}
 license = "MIT"
@@ -57,6 +57,9 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W"]
+
+[tool.ruff.lint.per-file-ignores]
+"code_review_graph/visualization.py" = ["E501"]  # embedded HTML/JS template
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

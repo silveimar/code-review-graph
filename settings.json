@@ -1,9 +1,0 @@
-{
-  "code-review-graph": {
-    "default_max_depth": 2,
-    "max_lines_per_file": 200,
-    "auto_update_on_save": true,
-    "auto_update_on_commit": true,
-    "ignore_patterns": []
-  }
-}

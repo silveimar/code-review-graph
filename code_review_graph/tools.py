@@ -699,7 +699,6 @@ def embed_graph(repo_root: str | None = None) -> dict[str, Any]:
 
 # Search paths for the LLM-optimized reference file
 _REFERENCE_PATHS = [
-    "references/LLM-OPTIMIZED-REFERENCE.md",
     "docs/LLM-OPTIMIZED-REFERENCE.md",
 ]
 

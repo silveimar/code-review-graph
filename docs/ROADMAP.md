@@ -2,6 +2,11 @@
 
 ## Shipped
 
+### v1.5.0
+- Generated files organized into `.code-review-graph/` directory (auto-gitignored, legacy migration)
+- Visualization density: collapsed start, search, edge toggles, scale-aware layout
+- Project cleanup: removed redundant files and directories
+
 ### v1.4.0
 - `init` command for automatic `.mcp.json` setup
 - Interactive D3.js graph visualization (`visualize` command)

@@ -4,7 +4,7 @@
 The graph uses SQLite with WAL mode. If you see lock errors:
 - Ensure only one build process runs at a time
 - The database auto-recovers; just retry
-- Delete `.code-review-graph.db-wal` and `.code-review-graph.db-shm` if corrupt
+- Delete `.code-review-graph/graph.db-wal` and `.code-review-graph/graph.db-shm` if corrupt
 
 ## Large repositories (>10k files)
 - First build may take 30-60 seconds

@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 # Default ignore patterns (in addition to .gitignore)
 DEFAULT_IGNORE_PATTERNS = [
+    ".code-review-graph/**",
     "node_modules/**",
     ".git/**",
     "__pycache__/**",
@@ -56,8 +57,35 @@ def find_repo_root(start: Path | None = None) -> Optional[Path]:
 
 
 def get_db_path(repo_root: Path) -> Path:
-    """Determine the database path for a repository."""
-    return repo_root / ".code-review-graph.db"
+    """Determine the database path for a repository.
+
+    Creates the ``.code-review-graph/`` directory and an inner ``.gitignore``
+    (with ``*``) so generated files are never committed.  If a legacy
+    ``.code-review-graph.db`` exists at the repo root the database is migrated
+    into the new directory (WAL/SHM side-files are discarded).
+    """
+    crg_dir = repo_root / ".code-review-graph"
+    new_db = crg_dir / "graph.db"
+
+    # Ensure directory exists
+    crg_dir.mkdir(exist_ok=True)
+
+    # Auto-create .gitignore inside the directory (idempotent)
+    inner_gitignore = crg_dir / ".gitignore"
+    if not inner_gitignore.exists():
+        inner_gitignore.write_text("*\n")
+
+    # Migrate legacy database if present
+    legacy_db = repo_root / ".code-review-graph.db"
+    if legacy_db.exists() and not new_db.exists():
+        legacy_db.rename(new_db)
+    # Discard stale WAL/SHM side-files from the old location
+    for suffix in ("-wal", "-shm", "-journal"):
+        side = repo_root / f".code-review-graph.db{suffix}"
+        if side.exists():
+            side.unlink()
+
+    return new_db
 
 
 def _load_ignore_patterns(repo_root: Path) -> list[str]:

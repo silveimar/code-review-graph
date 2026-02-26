@@ -40,8 +40,8 @@
         │           │              │
         ▼           ▼              ▼
    Tree-sitter   SQLite DB      git diff
-   grammars      (.code-        subprocess
-                 review-
+   grammars      (.code-review- subprocess
+                 graph/
                  graph.db)
 ```
 

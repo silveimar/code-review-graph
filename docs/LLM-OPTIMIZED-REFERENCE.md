@@ -1,4 +1,4 @@
-# LLM-OPTIMIZED REFERENCE — code-review-graph v1.4.0
+# LLM-OPTIMIZED REFERENCE — code-review-graph v1.5.0
 
 Claude Code: Read ONLY the exact `<section>` you need. Never load the whole file.
 
@@ -28,7 +28,7 @@ CLI: code-review-graph [init|build|update|status|watch|visualize|serve]
 </section>
 
 <section name="legal">
-MIT license. 100% local. No telemetry. DB file: .code-review-graph.db
+MIT license. 100% local. No telemetry. DB file: .code-review-graph/graph.db
 </section>
 
 <section name="watch">

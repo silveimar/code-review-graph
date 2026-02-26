@@ -1,6 +1,6 @@
 # Code Review Graph — User Guide
 
-**Version:** v1.4.0 (Feb 26, 2026)
+**Version:** v1.5.0 (Feb 26, 2026)
 
 ## Quick Installation (30 seconds)
 
@@ -46,9 +46,9 @@ Auto-updates the graph on every file save. Zero manual work.
 ### 5. Visualize the graph (optional)
 ```bash
 code-review-graph visualize
-open .code-review-graph.html
+open .code-review-graph/graph.html
 ```
-Interactive D3.js force-directed graph of your codebase. Updated each time you run the command.
+Interactive D3.js force-directed graph. Starts collapsed (File nodes only) — click a file to expand its children. Use the search bar to filter, and click legend edge types to toggle visibility.
 
 ### 6. Semantic search (optional)
 ```bash

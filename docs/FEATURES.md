@@ -1,6 +1,11 @@
 # Features
 
-## v1.4.0 (Current)
+## v1.5.0 (Current)
+- **File organization**: Generated files moved into `.code-review-graph/` directory (auto-created `.gitignore`, legacy migration)
+- **Visualization density**: Starts collapsed (File nodes only), search bar, clickable edge type toggles, scale-aware layout for large graphs
+- **Project cleanup**: Removed redundant `references/`, `agents/`, `settings.json`
+
+## v1.4.0
 - **`init` command**: Automatic `.mcp.json` setup for Claude Code integration
 - **Interactive D3.js graph visualization**: `code-review-graph visualize` generates an HTML graph you can explore in-browser
 - **Documentation overhaul**: Comprehensive docs audit across all reference files
@@ -35,6 +40,6 @@
 
 ## Privacy & Data
 - All data stays 100% local
-- Graph stored in `.code-review-graph.db` (SQLite)
+- Graph stored in `.code-review-graph/graph.db` (SQLite), auto-gitignored
 - No telemetry, no network calls
 - Respects `.gitignore` and `.code-review-graphignore`
