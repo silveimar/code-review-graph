@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import threading
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -127,6 +128,7 @@ class GraphStore:
         self._conn.execute("PRAGMA busy_timeout=5000")
         self._init_schema()
         self._nxg_cache: nx.DiGraph | None = None
+        self._cache_lock = threading.Lock()
 
     def __enter__(self) -> "GraphStore":
         return self
@@ -140,7 +142,8 @@ class GraphStore:
 
     def _invalidate_cache(self) -> None:
         """Invalidate the cached NetworkX graph after write operations."""
-        self._nxg_cache = None
+        with self._cache_lock:
+            self._nxg_cache = None
 
     def close(self) -> None:
         self._conn.close()
@@ -435,14 +438,15 @@ class GraphStore:
 
     def _build_networkx_graph(self) -> nx.DiGraph:
         """Build (or return cached) in-memory NetworkX directed graph from all edges."""
-        if self._nxg_cache is not None:
-            return self._nxg_cache
-        g: nx.DiGraph = nx.DiGraph()
-        rows = self._conn.execute("SELECT * FROM edges").fetchall()
-        for r in rows:
-            g.add_edge(r["source_qualified"], r["target_qualified"], kind=r["kind"])
-        self._nxg_cache = g
-        return g
+        with self._cache_lock:
+            if self._nxg_cache is not None:
+                return self._nxg_cache
+            g: nx.DiGraph = nx.DiGraph()
+            rows = self._conn.execute("SELECT * FROM edges").fetchall()
+            for r in rows:
+                g.add_edge(r["source_qualified"], r["target_qualified"], kind=r["kind"])
+            self._nxg_cache = g
+            return g
 
     def _make_qualified(self, node: NodeInfo) -> str:
         if node.kind == "File":
