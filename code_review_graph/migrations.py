@@ -39,8 +39,15 @@ def _set_schema_version(conn: sqlite3.Connection, version: int) -> None:
     )
 
 
+_KNOWN_TABLES = frozenset({
+    "nodes", "edges", "metadata", "communities", "flows", "flow_memberships", "nodes_fts",
+})
+
+
 def _has_column(conn: sqlite3.Connection, table: str, column: str) -> bool:
     """Check if a column exists in a table."""
+    if table not in _KNOWN_TABLES:
+        raise ValueError(f"Unknown table: {table}")
     cursor = conn.execute(f"PRAGMA table_info({table})")  # noqa: S608
     columns = [row[1] if isinstance(row, tuple) else row["name"] for row in cursor]
     return column in columns
@@ -48,6 +55,8 @@ def _has_column(conn: sqlite3.Connection, table: str, column: str) -> bool:
 
 def _table_exists(conn: sqlite3.Connection, table: str) -> bool:
     """Check if a table exists."""
+    if table not in _KNOWN_TABLES:
+        raise ValueError(f"Unknown table: {table}")
     row = conn.execute(
         "SELECT count(*) FROM sqlite_master WHERE type IN ('table', 'view') "
         "AND name = ?",

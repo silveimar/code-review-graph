@@ -60,4 +60,4 @@ jobs:
       - name: Install dependencies
         run: pip install -e ".[dev]" pytest-cov
       - name: Run tests with coverage
-        run: pytest --tb=short -q --cov=code_review_graph --cov-report=term-missing --cov-fail-under=50
+        run: pytest --tb=short -q --cov=code_review_graph --cov-report=term-missing --cov-fail-under=70

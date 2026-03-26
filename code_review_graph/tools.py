@@ -176,7 +176,10 @@ def build_or_update_graph(
                 **result,
             }
 
-        # -- Post-build: compute signatures for nodes that don't have them --
+        # -- Post-build steps (non-fatal; failures are surfaced as warnings) --
+        warnings: list[str] = []
+
+        # Compute signatures for nodes that don't have them
         try:
             rows = store._conn.execute(
                 "SELECT id, name, kind, params, return_type "
@@ -201,8 +204,9 @@ def build_or_update_graph(
             store._conn.commit()
         except Exception as e:
             logger.warning("Signature computation failed: %s", e)
+            warnings.append(f"Signature computation failed: {e}")
 
-        # -- Post-build: rebuild FTS index --
+        # Rebuild FTS index
         try:
             from code_review_graph.search import rebuild_fts_index
 
@@ -210,8 +214,9 @@ def build_or_update_graph(
             build_result["fts_indexed"] = fts_count
         except Exception as e:
             logger.warning("FTS index rebuild failed: %s", e)
+            warnings.append(f"FTS index rebuild failed: {e}")
 
-        # -- Post-build: trace execution flows --
+        # Trace execution flows
         try:
             from code_review_graph.flows import store_flows as _store_flows
             from code_review_graph.flows import trace_flows as _trace_flows
@@ -221,8 +226,9 @@ def build_or_update_graph(
             build_result["flows_detected"] = count
         except Exception as e:
             logger.warning("Flow detection failed: %s", e)
+            warnings.append(f"Flow detection failed: {e}")
 
-        # -- Post-build: detect communities --
+        # Detect communities
         try:
             from code_review_graph.communities import (
                 detect_communities as _detect_communities,
@@ -236,7 +242,10 @@ def build_or_update_graph(
             build_result["communities_detected"] = count
         except Exception as e:
             logger.warning("Community detection failed: %s", e)
+            warnings.append(f"Community detection failed: {e}")
 
+        if warnings:
+            build_result["warnings"] = warnings
         return build_result
     finally:
         store.close()

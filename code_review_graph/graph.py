@@ -232,12 +232,17 @@ class GraphStore:
         self, file_path: str, nodes: list[NodeInfo], edges: list[EdgeInfo], fhash: str = ""
     ) -> None:
         """Atomically replace all data for a file."""
-        self.remove_file_data(file_path)
-        for node in nodes:
-            self.upsert_node(node, file_hash=fhash)
-        for edge in edges:
-            self.upsert_edge(edge)
-        self._conn.commit()
+        self._conn.execute("BEGIN IMMEDIATE")
+        try:
+            self.remove_file_data(file_path)
+            for node in nodes:
+                self.upsert_node(node, file_hash=fhash)
+            for edge in edges:
+                self.upsert_edge(edge)
+            self._conn.commit()
+        except BaseException:
+            self._conn.rollback()
+            raise
         self._invalidate_cache()
 
     def set_metadata(self, key: str, value: str) -> None:
@@ -355,9 +360,9 @@ class GraphStore:
         impacted: set[str] = set()
 
         while frontier and depth < max_depth:
+            visited.update(frontier)
             next_frontier: set[str] = set()
             for qn in frontier:
-                visited.add(qn)
                 # Forward edges (things this node affects)
                 if qn in nxg:
                     for neighbor in nxg.neighbors(qn):
@@ -370,24 +375,18 @@ class GraphStore:
                         if pred not in visited:
                             next_frontier.add(pred)
                             impacted.add(pred)
+            next_frontier -= visited
             # Cap total nodes to prevent resource exhaustion on dense graphs
             if len(visited) + len(next_frontier) > max_nodes:
                 break
             frontier = next_frontier
             depth += 1
 
-        # Resolve to full node info
-        changed_nodes = []
-        for qn in seeds:
-            node = self.get_node(qn)
-            if node:
-                changed_nodes.append(node)
+        # Batch-fetch nodes instead of N+1 individual queries
+        changed_nodes = self._batch_get_nodes(seeds)
 
-        impacted_nodes = []
-        for qn in impacted - seeds:
-            node = self.get_node(qn)
-            if node:
-                impacted_nodes.append(node)
+        impacted_qns = impacted - seeds
+        impacted_nodes = self._batch_get_nodes(impacted_qns)
 
         # Truncation: cap impacted nodes and report total
         total_impacted = len(impacted_nodes)
@@ -539,6 +538,23 @@ class GraphStore:
                 edge = self._row_to_edge(r)
                 if edge.target_qualified in qualified_names:
                     results.append(edge)
+        return results
+
+    def _batch_get_nodes(self, qualified_names: set[str]) -> list[GraphNode]:
+        """Batch-fetch nodes by qualified name, staying under SQLite variable limits."""
+        if not qualified_names:
+            return []
+        qns = list(qualified_names)
+        results: list[GraphNode] = []
+        batch_size = 450
+        for i in range(0, len(qns), batch_size):
+            batch = qns[i:i + batch_size]
+            placeholders = ",".join("?" for _ in batch)
+            rows = self._conn.execute(  # nosec B608
+                f"SELECT * FROM nodes WHERE qualified_name IN ({placeholders})",
+                batch,
+            ).fetchall()
+            results.extend(self._row_to_node(r) for r in rows)
         return results
 
     # --- Internal helpers ---

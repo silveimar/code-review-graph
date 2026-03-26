@@ -133,9 +133,12 @@ _GIT_TIMEOUT = int(os.environ.get("CRG_GIT_TIMEOUT", "30"))  # seconds, configur
 
 def get_changed_files(repo_root: Path, base: str = "HEAD~1") -> list[str]:
     """Get list of changed files via git diff."""
+    if base.startswith("-"):
+        logger.warning("Invalid git ref (starts with '-'): %s", base)
+        return []
     try:
         result = subprocess.run(
-            ["git", "diff", "--name-only", base],
+            ["git", "diff", "--name-only", "--", base],
             capture_output=True,
             text=True,
             cwd=str(repo_root),

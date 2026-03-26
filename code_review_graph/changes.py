@@ -7,6 +7,7 @@ gaps. Produces risk-scored, priority-ordered review guidance.
 from __future__ import annotations
 
 import logging
+import os
 import re
 import subprocess
 from typing import Any
@@ -15,6 +16,8 @@ from .flows import get_affected_flows
 from .graph import GraphNode, GraphStore, _sanitize_name, node_to_dict
 
 logger = logging.getLogger(__name__)
+
+_GIT_TIMEOUT = int(os.environ.get("CRG_GIT_TIMEOUT", "30"))  # seconds, configurable
 
 # Security-sensitive keywords that increase a node's risk score.
 _SECURITY_KEYWORDS: set[str] = {
@@ -44,12 +47,16 @@ def parse_git_diff_ranges(
         Mapping of file paths to lists of ``(start_line, end_line)`` tuples.
         Returns an empty dict on error.
     """
+    if base.startswith("-"):
+        logger.warning("Invalid git ref (starts with '-'): %s", base)
+        return {}
     try:
         result = subprocess.run(
-            ["git", "diff", "--unified=0", base],
+            ["git", "diff", "--unified=0", "--", base],
             capture_output=True,
             text=True,
             cwd=repo_root,
+            timeout=_GIT_TIMEOUT,
         )
         if result.returncode != 0:
             logger.warning("git diff failed (rc=%d): %s", result.returncode, result.stderr[:200])

@@ -420,8 +420,19 @@ def apply_refactor(
             )
             continue
 
-        # Exact string replacement (no regex, no eval).
-        new_content = content.replace(old_text, new_text)
+        # Line-targeted replacement to avoid corrupting unrelated occurrences.
+        target_line = edit.get("line")
+        if target_line is not None:
+            lines = content.splitlines(keepends=True)
+            idx = target_line - 1  # 0-indexed
+            if 0 <= idx < len(lines) and old_text in lines[idx]:
+                lines[idx] = lines[idx].replace(old_text, new_text, 1)
+                new_content = "".join(lines)
+            else:
+                # Fall back to first-occurrence replacement if line doesn't match.
+                new_content = content.replace(old_text, new_text, 1)
+        else:
+            new_content = content.replace(old_text, new_text, 1)
         try:
             file_path.write_text(new_content, encoding="utf-8")
             edits_applied += 1
