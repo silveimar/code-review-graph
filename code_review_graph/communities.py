@@ -551,6 +551,9 @@ def store_communities(
     # that are tightly coupled to the DB transaction lifecycle.
     conn = store._conn
 
+    if conn.in_transaction:
+        logger.warning("Rolling back uncommitted transaction before BEGIN IMMEDIATE")
+        conn.rollback()
     # Wrap in explicit transaction so the DELETE + INSERT + UPDATE
     # sequence is atomic — no partial community data on crash.
     conn.execute("BEGIN IMMEDIATE")
@@ -561,7 +564,8 @@ def store_communities(
         count = 0
         for comm in communities:
             cursor = conn.execute(
-                """INSERT INTO communities (name, level, cohesion, size, dominant_language, description)
+                """INSERT INTO communities
+                   (name, level, cohesion, size, dominant_language, description)
                    VALUES (?, ?, ?, ?, ?, ?)""",
                 (
                     comm["name"],
