@@ -48,7 +48,10 @@ def find_hub_nodes(store: GraphStore, top_n: int = 10) -> list[dict]:
             "community_id": community_map.get(qn),
         })
 
-    scored.sort(key=lambda x: x["total_degree"], reverse=True)
+    scored.sort(
+        key=lambda x: x.get("total_degree", 0),  # type: ignore[return-value]
+        reverse=True,
+    )
     return scored[:top_n]
 
 
@@ -102,7 +105,10 @@ def find_bridge_nodes(
             "community_id": community_map.get(qn),
         })
 
-    results.sort(key=lambda x: x["betweenness"], reverse=True)
+    results.sort(
+        key=lambda x: float(x.get("betweenness", 0)),  # type: ignore[arg-type]
+        reverse=True,
+    )
     return results[:top_n]
 
 
@@ -141,15 +147,26 @@ def find_knowledge_gaps(store: GraphStore) -> dict[str, list[dict]]:
                 "degree": d,
             })
 
-    # 2. Thin communities (< 3 members)
+    # 2. Build community sizes and file maps from node data
+    comm_sizes: Counter[int] = Counter()
+    comm_files: dict[int, set[str]] = defaultdict(set)
+    for n in nodes:
+        cid = community_map.get(n.qualified_name)
+        if cid is not None:
+            comm_sizes[cid] += 1
+            comm_files[cid].add(n.file_path)
+
+    # Thin communities (< 3 members)
     communities = store.get_communities_list()
     thin = []
     for c in communities:
-        if c.get("size", 0) < 3:
+        cid = int(c["id"])
+        size = comm_sizes.get(cid, 0)
+        if size < 3:
             thin.append({
-                "community_id": c["id"],
-                "name": c.get("name", ""),
-                "size": c.get("size", 0),
+                "community_id": cid,
+                "name": str(c["name"]),
+                "size": size,
             })
 
     # 3. Untested hotspots (degree >= 5, no TESTED_BY)
@@ -167,25 +184,21 @@ def find_knowledge_gaps(store: GraphStore) -> dict[str, list[dict]]:
                 "degree": d,
             })
     untested_hotspots.sort(
-        key=lambda x: x["degree"], reverse=True
+        key=lambda x: x.get("degree", 0),  # type: ignore[return-value]
+        reverse=True,
     )
 
     # 4. Single-file communities
-    comm_files: dict[int, set[str]] = defaultdict(set)
-    for n in nodes:
-        cid = community_map.get(n.qualified_name)
-        if cid is not None:
-            comm_files[cid].add(n.file_path)
-
     single_file = []
     for c in communities:
-        cid = c["id"]
+        cid = int(c["id"])
         files = comm_files.get(cid, set())
-        if len(files) == 1 and c.get("size", 0) >= 3:
+        size = comm_sizes.get(cid, 0)
+        if len(files) == 1 and size >= 3:
             single_file.append({
                 "community_id": cid,
-                "name": c.get("name", ""),
-                "size": c.get("size", 0),
+                "name": str(c["name"]),
+                "size": size,
                 "file": next(iter(files)),
             })
 
@@ -295,7 +308,8 @@ def find_surprising_connections(
             })
 
     scored_edges.sort(
-        key=lambda x: x["surprise_score"], reverse=True
+        key=lambda x: float(x.get("surprise_score", 0)),  # type: ignore[arg-type]
+        reverse=True,
     )
     return scored_edges[:top_n]
 

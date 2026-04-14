@@ -84,12 +84,12 @@ def run_token_benchmark(
         })
 
     if results:
-        avg_ratio = (
-            sum(r["reduction_ratio"] for r in results)
-            / len(results)
+        total = sum(
+            r["reduction_ratio"] for r in results  # type: ignore[misc]
         )
+        avg_ratio = float(total) / len(results)  # type: ignore[arg-type]
     else:
-        avg_ratio = 0
+        avg_ratio = 0.0
 
     return {
         "naive_corpus_tokens": naive_total,

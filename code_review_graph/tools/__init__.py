@@ -49,6 +49,15 @@ from ._common import (
     _validate_repo_root,
 )
 
+# -- analysis_tools ---------------------------------------------------------
+from .analysis_tools import (
+    get_bridge_nodes_func,
+    get_hub_nodes_func,
+    get_knowledge_gaps_func,
+    get_suggested_questions_func,
+    get_surprising_connections_func,
+)
+
 # -- build ------------------------------------------------------------------
 from .build import build_or_update_graph, run_postprocess
 
@@ -83,15 +92,6 @@ from .refactor_tools import apply_refactor_func, refactor_func
 
 # -- registry_tools ---------------------------------------------------------
 from .registry_tools import cross_repo_search_func, list_repos_func
-
-# -- analysis_tools ---------------------------------------------------------
-from .analysis_tools import (
-    get_bridge_nodes_func,
-    get_hub_nodes_func,
-    get_knowledge_gaps_func,
-    get_suggested_questions_func,
-    get_surprising_connections_func,
-)
 
 # -- review -----------------------------------------------------------------
 from .review import (

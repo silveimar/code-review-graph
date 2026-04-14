@@ -338,7 +338,7 @@ def export_svg(store: GraphStore, output_path: Path) -> Path:
     nodes_data = data["nodes"]
     edges_data = data["edges"]
 
-    nxg = nx.DiGraph()
+    nxg: nx.DiGraph = nx.DiGraph()  # type: ignore[type-arg]
     for n in nodes_data:
         nxg.add_node(
             n["qualified_name"],
