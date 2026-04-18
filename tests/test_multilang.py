@@ -1322,6 +1322,41 @@ class TestJuliaParsing:
         assert all(n.language == "julia" for n in nameable)
         assert len(nameable) >= 5
 
+    def test_finds_enum_type(self):
+        classes = [n for n in self.nodes if n.kind == "Class"]
+        by_name = {c.name: c for c in classes}
+        assert "Color" in by_name
+        assert by_name["Color"].extra.get("julia_kind") == "enum"
+
+    def test_finds_enum_variants(self):
+        variants = {
+            n.name for n in self.nodes
+            if n.kind == "Function"
+            and (n.extra or {}).get("julia_kind") == "enum_variant"
+        }
+        assert {"RED", "BLUE", "GREEN"} <= variants
+
+    def test_enum_variants_contained_by_type(self):
+        contains = [e for e in self.edges if e.kind == "CONTAINS"]
+        # Color -> RED, BLUE, GREEN
+        variants_under_color = {
+            e.target.split(".")[-1]
+            for e in contains
+            if e.source.endswith("Color")
+        }
+        assert {"RED", "BLUE", "GREEN"} <= variants_under_color
+
+    def test_finds_public_symbols(self):
+        refs = [
+            e for e in self.edges
+            if e.kind == "REFERENCES"
+            and e.extra
+            and e.extra.get("julia_public")
+        ]
+        trailing = {e.target.split(".")[-1] for e in refs}
+        assert "square" in trailing
+        assert "add" in trailing
+
     def test_qualified_function_references_base(self):
         refs = [e for e in self.edges if e.kind == "REFERENCES"]
         # function Base.show(...) should emit a REFERENCES edge to Base

@@ -6,6 +6,9 @@ import Base: show, print
 import JSON
 
 export greet, Dog, process
+public square, add
+
+@enum Color RED BLUE GREEN
 
 abstract type AbstractAnimal end
 
