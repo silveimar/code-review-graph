@@ -36,12 +36,12 @@ Plans:
   1. Local artifacts use documented encryption/protection strategy.
   2. Access control checks enforce secure file/runtime permissions.
   3. Audit events are emitted for sensitive operations.
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 02-01: Implement artifact protection strategy for local data
-- [ ] 02-02: Add permission checks and secure defaults
-- [ ] 02-03: Expand audit logging for protected operations
+- [ ] 02-01-PLAN.md — Artifact encryption policy, crypto module, graph/audit/memory/wiki integration (REQ-03)
+- [ ] 02-02-PLAN.md — Filesystem permissions for `.code-review-graph/` and verify-policy reporting (REQ-04)
+- [ ] 02-03-PLAN.md — Audit expansion for encryption and permission events (REQ-06)
 
 ### Phase 3: Retention, Deletion, and Operational Safety
 **Goal**: Add lifecycle controls to minimize residual sensitive data.
