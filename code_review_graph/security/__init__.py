@@ -1,5 +1,6 @@
 """Security policy models and loaders."""
 
+from .policy_loader import PolicyLoadError, load_policy, resolve_policy_for_profile
 from .policy_schema import (
     AuditPolicy,
     EgressPolicy,
@@ -8,7 +9,6 @@ from .policy_schema import (
     PolicyMode,
     ProtectedDataClass,
 )
-from .policy_loader import PolicyLoadError, load_policy, resolve_policy_for_profile
 
 __all__ = [
     "AuditPolicy",
