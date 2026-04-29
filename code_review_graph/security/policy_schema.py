@@ -46,6 +46,20 @@ class AuditPolicy(BaseModel):
     sink: StrictStr = "jsonl"
 
 
+class ArtifactEncryptionPolicy(BaseModel):
+    """Application-layer encryption for repo-local artifacts under ``hardened_local``.
+
+    When ``require_encryption`` is true under hardened_local, loaders must not silently
+    disable encryption or fall back to plaintext for protected artifacts (D-03).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: StrictBool = False
+    require_encryption: StrictBool = False
+    key_env_var: StrictStr = "CRG_ARTIFACT_ENCRYPTION_KEY"
+
+
 class HardenedPolicy(BaseModel):
     """Top-level policy contract for local-only hardened behavior."""
 
@@ -62,3 +76,6 @@ class HardenedPolicy(BaseModel):
         ]
     )
     audit: AuditPolicy = Field(default_factory=AuditPolicy)
+    artifact_encryption: ArtifactEncryptionPolicy = Field(
+        default_factory=ArtifactEncryptionPolicy
+    )

@@ -118,3 +118,13 @@ def resolve_policy_for_profile(
             "allowed_local_destinations": ["127.0.0.1", "localhost", "::1"],
         },
     )
+
+
+def resolve_effective_runtime_policy() -> HardenedPolicy:
+    """Resolve policy from ``CRG_SECURITY_PROFILE`` and ``CRG_SECURITY_POLICY_PATH``."""
+    import os
+
+    profile = os.environ.get("CRG_SECURITY_PROFILE", "standard").strip().lower()
+    cfg = os.environ.get("CRG_SECURITY_POLICY_PATH", "").strip()
+    config_path = Path(cfg) if cfg else None
+    return resolve_policy_for_profile(profile, config_path=config_path)

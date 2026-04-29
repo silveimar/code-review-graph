@@ -11,13 +11,33 @@ import re
 import sqlite3
 from collections import Counter
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .communities import get_communities
 from .flows import get_flows
 from .graph import GraphStore, _sanitize_name
+from .security.artifact_crypto import (
+    EncryptionRequiredError,
+    decrypt_optional_payload,
+    encrypt_optional_plaintext,
+    refuse_sensitive_plaintext,
+)
+from .security.policy_loader import resolve_effective_runtime_policy
+
+if TYPE_CHECKING:
+    from .security.policy_schema import HardenedPolicy
 
 logger = logging.getLogger(__name__)
+
+
+def _write_wiki_page(path: Path, content: str, policy: "HardenedPolicy") -> None:
+    payload = encrypt_optional_plaintext(content.encode("utf-8"), policy)
+    path.write_bytes(payload)
+
+
+def _read_wiki_page(path: Path, policy: "HardenedPolicy") -> str:
+    raw = path.read_bytes()
+    return decrypt_optional_payload(raw, policy).decode("utf-8", errors="replace")
 
 
 def _slugify(name: str) -> str:
@@ -172,6 +192,7 @@ def generate_wiki(
     store: GraphStore,
     wiki_dir: str | Path,
     force: bool = False,
+    policy: "HardenedPolicy | None" = None,
 ) -> dict[str, Any]:
     """Generate a markdown wiki from the community structure.
 
@@ -186,6 +207,12 @@ def generate_wiki(
     Returns:
         Dict with pages_generated, pages_updated, pages_unchanged counts.
     """
+    effective_policy = policy if policy is not None else resolve_effective_runtime_policy()
+    if refuse_sensitive_plaintext(effective_policy):
+        raise EncryptionRequiredError(
+            "Cannot generate wiki: artifact encryption required but key missing"
+        )
+
     wiki_path = Path(wiki_dir)
     wiki_path.mkdir(parents=True, exist_ok=True)
 
@@ -221,14 +248,14 @@ def generate_wiki(
         content = _generate_community_page(store, comm)
 
         if filepath.exists() and not force:
-            existing = filepath.read_text(encoding="utf-8", errors="replace")
+            existing = _read_wiki_page(filepath, effective_policy)
             if existing == content:
                 pages_unchanged += 1
                 page_entries.append((slug, name, comm["size"]))
                 continue
 
         already_existed = filepath.exists()
-        filepath.write_text(content, encoding="utf-8")
+        _write_wiki_page(filepath, content, effective_policy)
         if already_existed:
             pages_updated += 1
         else:
@@ -257,14 +284,14 @@ def generate_wiki(
     index_path = wiki_path / "index.md"
 
     if index_path.exists() and not force:
-        existing_index = index_path.read_text(encoding="utf-8", errors="replace")
+        existing_index = _read_wiki_page(index_path, effective_policy)
         if existing_index == index_content:
             pages_unchanged += 1
         else:
-            index_path.write_text(index_content, encoding="utf-8")
+            _write_wiki_page(index_path, index_content, effective_policy)
             pages_updated += 1
     else:
-        index_path.write_text(index_content, encoding="utf-8")
+        _write_wiki_page(index_path, index_content, effective_policy)
         pages_generated += 1
 
     return {
@@ -274,7 +301,11 @@ def generate_wiki(
     }
 
 
-def get_wiki_page(wiki_dir: str | Path, page_name: str) -> str | None:
+def get_wiki_page(
+    wiki_dir: str | Path,
+    page_name: str,
+    policy: "HardenedPolicy | None" = None,
+) -> str | None:
     """Retrieve a specific wiki page by community name.
 
     Args:
@@ -284,22 +315,23 @@ def get_wiki_page(wiki_dir: str | Path, page_name: str) -> str | None:
     Returns:
         Page content as a string, or None if the page does not exist.
     """
+    effective_policy = policy if policy is not None else resolve_effective_runtime_policy()
     wiki_path = Path(wiki_dir)
     slug = _slugify(page_name)
     filepath = wiki_path / f"{slug}.md"
 
     if filepath.is_file():
-        return filepath.read_text(encoding="utf-8", errors="replace")
+        return _read_wiki_page(filepath, effective_policy)
 
     # Fallback: try exact filename match — with path traversal protection
     exact_path = (wiki_path / page_name).resolve()
     if exact_path.is_file() and exact_path.is_relative_to(wiki_path.resolve()):
-        return exact_path.read_text(encoding="utf-8", errors="replace")
+        return _read_wiki_page(exact_path, effective_policy)
 
     # Fallback: search for partial match
     if wiki_path.is_dir():
         for p in wiki_path.iterdir():
             if p.suffix == ".md" and slug in p.stem:
-                return p.read_text(encoding="utf-8", errors="replace")
+                return _read_wiki_page(p, effective_policy)
 
     return None

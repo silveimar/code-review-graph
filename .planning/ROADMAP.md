@@ -6,8 +6,8 @@ Deliver a hardening-first progression that establishes local policy enforcement 
 
 ## Phases
 
-- [ ] **Phase 1: Policy Foundation and Threat Boundaries** - Define centralized local-only policy enforcement.
-- [ ] **Phase 2: Data Protection and Access Controls** - Protect local artifacts and runtime access.
+- [x] **Phase 1: Policy Foundation and Threat Boundaries** - Define centralized local-only policy enforcement.
+- [x] **Phase 2: Data Protection and Access Controls** - Protect local artifacts and runtime access.
 - [ ] **Phase 3: Retention, Deletion, and Operational Safety** - Add lifecycle controls and cleanup guarantees.
 - [ ] **Phase 4: Verification and Release Hardening** - Validate and ship hardened-local profile safely.
 
@@ -39,9 +39,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Artifact encryption policy, crypto module, graph/audit/memory/wiki integration (REQ-03)
-- [ ] 02-02-PLAN.md — Filesystem permissions for `.code-review-graph/` and verify-policy reporting (REQ-04)
-- [ ] 02-03-PLAN.md — Audit expansion for encryption and permission events (REQ-06)
+- [x] 02-01-PLAN.md — Artifact encryption policy, crypto module, graph/audit/memory/wiki integration (REQ-03)
+- [x] 02-02-PLAN.md — Filesystem permissions for `.code-review-graph/` and verify-policy reporting (REQ-04)
+- [x] 02-03-PLAN.md — Audit expansion for encryption and permission events (REQ-06)
 
 ### Phase 3: Retention, Deletion, and Operational Safety
 **Goal**: Add lifecycle controls to minimize residual sensitive data.

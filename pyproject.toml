@@ -35,6 +35,8 @@ dependencies = [
     "networkx>=3.2,<4",
     "watchdog>=4.0.0,<6",
     "tomli>=2.0.0,<3; python_version < '3.11'",
+    "cryptography>=46.0.5",
+    "sqlcipher3>=0.6.0",
 ]
 
 [project.urls]

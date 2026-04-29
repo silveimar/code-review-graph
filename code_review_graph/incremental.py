@@ -212,7 +212,27 @@ def get_data_dir(repo_root: Path) -> Path:
             # Data dir might be read-only (rare); that's OK, it's a best-effort guard.
             pass
 
+    _maybe_apply_hardened_fs_permissions(data_dir)
+
     return data_dir
+
+
+def _maybe_apply_hardened_fs_permissions(data_dir: Path) -> None:
+    """Apply POSIX 0700/0600 when the effective security profile is ``hardened_local``."""
+    try:
+        from .security.fs_permissions import apply_hardened_data_dir_permissions
+        from .security.policy_loader import PolicyLoadError, resolve_effective_runtime_policy
+        from .security.policy_schema import PolicyMode
+
+        try:
+            pol = resolve_effective_runtime_policy()
+        except PolicyLoadError:
+            return
+        if pol.mode != PolicyMode.HARDENED_LOCAL:
+            return
+        apply_hardened_data_dir_permissions(data_dir)
+    except Exception:  # noqa: BLE001 — never break graph workflows on chmod
+        return
 
 
 def get_db_path(repo_root: Path) -> Path:

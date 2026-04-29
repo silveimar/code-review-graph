@@ -6,7 +6,18 @@ import logging
 import re
 import time
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+from .security.artifact_crypto import (
+    EncryptionRequiredError,
+    decrypt_optional_payload,
+    encrypt_optional_plaintext,
+    refuse_sensitive_plaintext,
+)
+from .security.policy_loader import resolve_effective_runtime_policy
+
+if TYPE_CHECKING:
+    from .security.policy_schema import HardenedPolicy
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +29,7 @@ def save_result(
     result_type: str = "query",
     memory_dir: Path | None = None,
     repo_root: Path | None = None,
+    policy: "HardenedPolicy | None" = None,
 ) -> Path:
     """Save a Q&A result as markdown for re-ingestion.
 
@@ -33,6 +45,12 @@ def save_result(
     Returns:
         Path to the saved file.
     """
+    effective_policy = policy if policy is not None else resolve_effective_runtime_policy()
+    if refuse_sensitive_plaintext(effective_policy):
+        raise EncryptionRequiredError(
+            "Cannot persist memory: artifact encryption required but key missing"
+        )
+
     if memory_dir is None:
         if repo_root is None:
             raise ValueError(
@@ -69,7 +87,9 @@ def save_result(
     ])
 
     path = memory_dir / filename
-    path.write_text("\n".join(lines), encoding="utf-8")
+    body = "\n".join(lines).encode("utf-8")
+    payload = encrypt_optional_plaintext(body, effective_policy)
+    path.write_bytes(payload)
     logger.info("Saved result to %s", path)
     return path
 
@@ -77,11 +97,13 @@ def save_result(
 def list_memories(
     memory_dir: Path | None = None,
     repo_root: Path | None = None,
+    policy: "HardenedPolicy | None" = None,
 ) -> list[dict[str, Any]]:
     """List all saved memory files.
 
     Returns list of dicts with: path, question, type, timestamp.
     """
+    effective_policy = policy if policy is not None else resolve_effective_runtime_policy()
     if memory_dir is None:
         if repo_root is None:
             return []
@@ -95,7 +117,10 @@ def list_memories(
     results = []
     for f in sorted(memory_dir.glob("*.md")):
         try:
-            text = f.read_text(encoding="utf-8")
+            raw = f.read_bytes()
+            text = decrypt_optional_payload(raw, effective_policy).decode(
+                "utf-8", errors="replace"
+            )
             # Parse frontmatter
             meta: dict[str, Any] = {"path": str(f)}
             if text.startswith("---"):

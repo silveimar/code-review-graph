@@ -14,7 +14,10 @@ import threading
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
+
+if TYPE_CHECKING:
+    from .security.policy_schema import HardenedPolicy
 
 import networkx as nx
 
@@ -142,16 +145,20 @@ class GraphStats:
 class GraphStore:
     """SQLite-backed code knowledge graph."""
 
-    def __init__(self, db_path: str | Path) -> None:
+    def __init__(
+        self,
+        db_path: str | Path,
+        *,
+        policy: "HardenedPolicy | None" = None,
+    ) -> None:
+        from .security.artifact_crypto import open_graph_sqlite_connection
+        from .security.policy_loader import resolve_effective_runtime_policy
+
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        self._conn = sqlite3.connect(
-            str(self.db_path), timeout=30, check_same_thread=False,
-            isolation_level=None,  # Disable implicit transactions (#135)
-        )
-        self._conn.row_factory = sqlite3.Row
-        self._conn.execute("PRAGMA journal_mode=WAL")
-        self._conn.execute("PRAGMA busy_timeout=5000")
+        effective_policy = policy if policy is not None else resolve_effective_runtime_policy()
+        self._policy = effective_policy
+        self._conn = open_graph_sqlite_connection(self.db_path, effective_policy)
         self._init_schema()
         # Ensure schema_version is set, then run pending migrations
         if get_schema_version(self._conn) < 1:

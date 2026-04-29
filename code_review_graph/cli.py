@@ -379,6 +379,13 @@ def _handle_verify_policy(args: argparse.Namespace) -> int:
         },
     }
 
+    from .incremental import find_project_root, get_data_dir
+    from .security.fs_permissions import verify_data_dir_permissions
+
+    root = find_project_root()
+    if root is not None:
+        report["filesystem_permissions"] = verify_data_dir_permissions(get_data_dir(root))
+
     emit_audit_record(
         policy,
         event_type="policy_verify",
@@ -404,6 +411,14 @@ def _handle_verify_policy(args: argparse.Namespace) -> int:
             "  Guard probe (cloud URL denied): "
             f"{'yes' if egress_guard_ok else 'no'}"
         )
+        fs_rep = report.get("filesystem_permissions")
+        if fs_rep:
+            print(
+                f"  Filesystem permissions: {fs_rep.get('keyword', 'unknown')} "
+                f"({fs_rep.get('status', '')})"
+            )
+            if fs_rep.get("data_dir_mode_octal"):
+                print(f"  Data dir mode: {fs_rep['data_dir_mode_octal']}")
 
     return 0 if compliant else 1
 
