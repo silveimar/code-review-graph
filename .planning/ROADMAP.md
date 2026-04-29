@@ -10,7 +10,7 @@ Deliver a hardening-first progression that establishes local policy enforcement 
 - [x] **Phase 2: Data Protection and Access Controls** - Protect local artifacts and runtime access.
 - [x] **Phase 3: Retention, Deletion, and Operational Safety** - Add lifecycle controls and cleanup guarantees.
 - [x] **Phase 4: Verification and Release Hardening** - Validate and ship hardened-local profile safely.
-- [ ] **Phase 5: Retention Phase Formal Verification** - Publish `03-VERIFICATION.md` to close milestone traceability for REQ-05/REQ-06.
+- [x] **Phase 5: Retention Phase Formal Verification** - Publish `03-VERIFICATION.md` to close milestone traceability for REQ-05/REQ-06.
 - [ ] **Phase 6: Release Phase Formal Verification** - Publish `04-VERIFICATION.md` to close milestone traceability for Phase 4 requirement rows.
 
 ## Phase Details
@@ -83,10 +83,10 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. `03-VERIFICATION.md` exists with requirement trace table and PASS/passed outcome.
   2. Document references automated commands that prove REQ-05 and REQ-06 behaviors.
-**Plans**: TBD
+**Plans**: 1 plan (complete)
 
 Plans:
-- [ ] 05-01: Author Phase 3 formal verification report (`03-VERIFICATION.md`)
+- [x] 05-01: Author Phase 3 formal verification report (`03-VERIFICATION.md`)
 
 ### Phase 6: Release Phase Formal Verification
 **Goal**: Close audit gap **missing `04-VERIFICATION.md`** — consolidate posture tests, docs, and CI narrative for formal milestone sign-off.
