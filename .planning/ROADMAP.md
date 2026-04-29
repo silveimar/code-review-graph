@@ -66,9 +66,9 @@ Plans:
   1. Hardened-local test suite validates all required controls.
   2. CI includes security regression coverage for hardening features.
   3. Release checklist confirms readiness for local secure usage.
-**Plans**: TBD
+**Plans**: 3
 
 Plans:
-- [ ] 04-01: Build end-to-end hardening verification suite
-- [ ] 04-02: Integrate security regressions into CI gates
-- [ ] 04-03: Finalize release hardening checklist and docs
+- [x] 04-01: Build end-to-end hardening verification suite
+- [x] 04-02: Integrate security regressions into CI gates
+- [x] 04-03: Finalize release hardening checklist and docs

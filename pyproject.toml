@@ -130,6 +130,9 @@ skips = ["B101", "B404", "B603", "B607", "B608"]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 norecursedirs = ["tests/fixtures"]
+markers = [
+    "hardening_posture: Phase 4 orchestrated local security posture tests (subprocess CLI + in-process guards)",
+]
 
 [dependency-groups]
 dev = [

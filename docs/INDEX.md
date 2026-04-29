@@ -10,3 +10,5 @@
 - [ROADMAP.md](ROADMAP.md) -- Shipped and planned features
 - [LEGAL.md](LEGAL.md) -- License and privacy
 - [security-retention.md](security-retention.md) -- Retention config, `cleanup-data`, and residual-risk notes
+- [security-release-checklist.md](security-release-checklist.md) -- Pre-release verification for hardened-local (REQ-07, pytest, `verify-policy`)
+- [ci-security-regression.md](ci-security-regression.md) -- How CI enforces security/hardening pytest coverage

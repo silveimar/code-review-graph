@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Phase 3 executed — verification pending
-last_updated: "2026-04-29T23:30:00.000Z"
+status: Phase 4 executed — verification recommended
+last_updated: "2026-04-29T23:45:00.000Z"
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
+  total_plans: 12
+  completed_plans: 12
   percent: 100
 ---
 
@@ -16,7 +16,7 @@ progress:
 
 ## Status
 
-- Workflow: security hardening — Phase 3 plans executed (retention schema, cleanup CLI, verify-policy + runbook).
+- Workflow: security hardening — Phase 4 plans **04-01**–**04-03** executed (hardening posture tests, CI regression doc, release checklist).
 - Date: 2026-04-29
 
 ## Active Context
@@ -28,9 +28,9 @@ progress:
 
 - Phase 1–2: complete with verification.
 - Phase 3 (`03-retention-deletion-and-operational-safety`): **execution complete**; verification pass pending.
-- Phase 4: **context gathered** — planning/execution not started.
+- Phase 4: **executed** — `tests/test_hardening_posture.py`, `docs/security-release-checklist.md`, `docs/ci-security-regression.md`, marker in `pyproject.toml`.
 
 ## Next Command
 
-- `/gsd-plan-phase 4 --auto` — continue `--chain`: research (if needed) → plans → execute-phase (or run `/gsd-plan-phase 4` without `--auto` for interactive planning).
-- Optional: `/gsd-verify-work` for Phase 3 if still outstanding.
+- `/gsd-verify-work` — Phase 4 (and Phase 3 if still outstanding) UAT / checklist pass against REQUIREMENTS.
+- Or: `uv run pytest -m hardening_posture` and follow `docs/security-release-checklist.md` locally.
