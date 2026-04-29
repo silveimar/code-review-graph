@@ -264,17 +264,17 @@ def test_egress_policy_matrix(mode, destination, expected):
 | A2 | A JSONL audit sink is sufficient baseline for Phase 1 before optional SQLite audit table | Architecture Patterns | Medium: may under-serve operator query/reporting needs |
 | A3 | “Central guard first” is preferable to introducing a full policy engine DSL in this phase | Don’t Hand-Roll | Low: planner might need extra tasks if richer policy language is required immediately |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Scope of protected payload classes for egress blocking**
-   - What we know: Requirements call for no unapproved outbound transmission of analyzed code/content in hardened profile [VERIFIED: .planning/REQUIREMENTS.md]
-   - What's unclear: Exact classification boundary (e.g., file paths only vs symbols vs snippets vs embeddings vectors)
-   - Recommendation: Lock an explicit `data_classification` matrix in plan task 01-01 and reuse it in tests.
+1. **Scope of protected payload classes for egress blocking — RESOLVED**
+   - Decision: Phase 1 treats `source_snippet`, `symbol_context`, `full_file_content`, and `embedding_input` as protected payload classes.
+   - Implementation note: Policy schema includes a concrete `protected_data_classes` list with these values and default deny for cloud destinations in hardened mode.
+   - Follow-up: Additional classes can be appended in future phases without weakening defaults.
 
-2. **Audit sink format and rotation policy in Phase 1**
-   - What we know: Local audit traces are required now; retention controls are Phase 3 [VERIFIED: .planning/ROADMAP.md]
-   - What's unclear: Whether rotation/tamper sealing must be included in this phase or deferred
-   - Recommendation: Implement append-only structured audit baseline now; schedule retention/tamper-hardening enhancements in later phases.
+2. **Audit sink format and rotation policy in Phase 1 — RESOLVED**
+   - Decision: Phase 1 implements append-only local JSONL audit baseline and explicit non-sensitive event schema.
+   - Deferred scope: Rotation/tamper-evidence enhancements are intentionally deferred to later lifecycle/security phases.
+   - Rationale: Satisfies REQ-06 now while preserving phase boundaries from ROADMAP.
 
 ## Environment Availability
 

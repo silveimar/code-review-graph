@@ -21,5 +21,11 @@
   - Strict local access controls/auditability
   - Data retention and secure deletion
 
+## Phase Progress
+- Phase 1 (`01-policy-foundation-and-threat-boundaries`) planned with executable plans:
+  - `01-01-PLAN.md`
+  - `01-02-PLAN.md`
+  - `01-03-PLAN.md`
+
 ## Next Command
-- `/gsd-plan-phase 1`
+- `/gsd-execute-phase 1`
