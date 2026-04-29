@@ -46,6 +46,21 @@ class AuditPolicy(BaseModel):
     sink: StrictStr = "jsonl"
 
 
+class RetentionPolicy(BaseModel):
+    """Optional time-based retention limits for repo-local artifact families (REQ-05).
+
+    Each field is ``max_age_days`` for that sink. ``None`` means no limit (unlimited age).
+    Enforcement evaluates artifact mtimes; SQLite internals follow pragmatic deletion (see CONTEXT).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    audit_log: int | None = Field(default=None, ge=1)
+    memory_artifacts: int | None = Field(default=None, ge=1)
+    wiki_outputs: int | None = Field(default=None, ge=1)
+    graph_derived: int | None = Field(default=None, ge=1)
+
+
 class ArtifactEncryptionPolicy(BaseModel):
     """Application-layer encryption for repo-local artifacts under ``hardened_local``.
 
@@ -79,3 +94,4 @@ class HardenedPolicy(BaseModel):
     artifact_encryption: ArtifactEncryptionPolicy = Field(
         default_factory=ArtifactEncryptionPolicy
     )
+    retention: RetentionPolicy = Field(default_factory=RetentionPolicy)

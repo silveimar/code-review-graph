@@ -12,6 +12,7 @@ Usage:
     code-review-graph wiki
     code-review-graph detect-changes [--base BASE] [--brief]
     code-review-graph verify-policy [--json]
+    code-review-graph cleanup-data [--repo ROOT] [--apply] [--json]
     code-review-graph register <path> [--alias name]
     code-review-graph unregister <path_or_alias>
     code-review-graph repos
@@ -47,6 +48,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .graph import GraphStore
+    from .security.policy_schema import HardenedPolicy
 
 logger = logging.getLogger(__name__)
 
@@ -371,6 +373,7 @@ def _handle_verify_policy(args: argparse.Namespace) -> int:
             "default_action": policy.egress.default_action.value,
             "allow_cloud_destinations": policy.egress.allow_cloud_destinations,
         },
+        "retention": _retention_summary_dict(policy),
         "guard_probe": {
             "sample_operation": "embeddings.openai",
             "sample_destination": "https://api.openai.com/v1",
@@ -411,6 +414,23 @@ def _handle_verify_policy(args: argparse.Namespace) -> int:
             "  Guard probe (cloud URL denied): "
             f"{'yes' if egress_guard_ok else 'no'}"
         )
+        ret = policy.retention
+        print("  Retention (max age days, unlimited if unset):")
+        print(f"    audit_log: {ret.audit_log if ret.audit_log is not None else 'unlimited'}")
+        print(
+            "    memory_artifacts: "
+            f"{ret.memory_artifacts if ret.memory_artifacts is not None else 'unlimited'}"
+        )
+        print(
+            "    wiki_outputs: "
+            f"{ret.wiki_outputs if ret.wiki_outputs is not None else 'unlimited'}"
+        )
+        print(
+            "    graph_derived: "
+            f"{ret.graph_derived if ret.graph_derived is not None else 'unlimited'}"
+        )
+        print("    Cleanup: code-review-graph cleanup-data (dry-run; add --apply to delete)")
+        print("    Runbook: docs/security-retention.md")
         fs_rep = report.get("filesystem_permissions")
         if fs_rep:
             print(
@@ -421,6 +441,109 @@ def _handle_verify_policy(args: argparse.Namespace) -> int:
                 print(f"  Data dir mode: {fs_rep['data_dir_mode_octal']}")
 
     return 0 if compliant else 1
+
+
+def _retention_summary_dict(policy: "HardenedPolicy") -> dict:
+    """Structured retention posture for verify-policy JSON (additive keys only)."""
+    r = policy.retention
+    return {
+        "audit_log_max_age_days": r.audit_log,
+        "memory_artifacts_max_age_days": r.memory_artifacts,
+        "wiki_outputs_max_age_days": r.wiki_outputs,
+        "graph_derived_max_age_days": r.graph_derived,
+        "cleanup_command": "code-review-graph cleanup-data",
+        "cleanup_hint": "Dry-run by default; pass --apply to delete expired artifacts.",
+    }
+
+
+def _handle_cleanup_data(args: argparse.Namespace) -> int:
+    """Remove artifacts older than retention policy limits (REQ-05); audit on apply (REQ-06)."""
+    from .incremental import find_project_root, get_data_dir
+    from .security.audit import emit_audit_record
+    from .security.policy_loader import PolicyLoadError, resolve_policy_for_profile
+    from .security.retention_eval import evaluate_retention_candidates
+
+    repo_arg = getattr(args, "repo", None)
+    root = Path(repo_arg).resolve() if repo_arg else find_project_root()
+    if root is None:
+        root = Path.cwd()
+
+    data_dir = get_data_dir(root)
+
+    profile = os.environ.get("CRG_SECURITY_PROFILE", "standard").strip().lower()
+    cfg = os.environ.get("CRG_SECURITY_POLICY_PATH", "").strip()
+    config_path = Path(cfg) if cfg else None
+
+    try:
+        policy = resolve_policy_for_profile(profile, config_path=config_path)
+    except PolicyLoadError as exc:
+        print(f"cleanup-data: could not load policy: {exc}", file=sys.stderr)
+        return 2
+
+    candidates = evaluate_retention_candidates(policy, data_dir)
+    apply_run = bool(getattr(args, "apply", False))
+    json_mode = bool(getattr(args, "json", False))
+
+    payload = {
+        "dry_run": not apply_run,
+        "data_dir": str(data_dir),
+        "candidate_count": len(candidates),
+        "candidates": [
+            {
+                "path": str(c.path),
+                "sink": c.sink,
+                "reason": c.reason,
+                "age_days": round(c.age_days, 4),
+            }
+            for c in candidates
+        ],
+    }
+
+    if not apply_run:
+        if json_mode:
+            print(json.dumps(payload, indent=2))
+        else:
+            print("cleanup-data: dry-run (no files deleted). Use --apply to remove candidates.")
+            print(f"  Data directory: {data_dir}")
+            if not candidates:
+                print("  No retention candidates (limits unset or nothing expired).")
+            for c in candidates:
+                print(f"  - [{c.sink}] {c.path} ({c.reason})")
+            print("  See also: docs/security-retention.md")
+        return 0
+
+    removed = 0
+    errors: list[str] = []
+    for c in candidates:
+        try:
+            c.path.unlink(missing_ok=True)
+            removed += 1
+        except OSError as exc:
+            errors.append(f"{c.path}: {exc}")
+
+    emit_audit_record(
+        policy,
+        event_type="retention_cleanup",
+        operation="retention.cleanup",
+        result="success" if not errors else "partial",
+        reason="apply_complete" if not errors else "apply_partial",
+        metadata={
+            "removed_count": str(removed),
+            "error_count": str(len(errors)),
+        },
+    )
+
+    payload["removed"] = removed
+    payload["errors"] = errors
+
+    if json_mode:
+        print(json.dumps(payload, indent=2))
+        return 0 if not errors else 1
+    print(f"cleanup-data: removed {removed} path(s) under {data_dir}")
+    if errors:
+        for err_item in errors:
+            print(f"  error: {err_item}", file=sys.stderr)
+    return 0 if not errors else 1
 
 
 def _cli_post_process(store: GraphStore) -> None:
@@ -658,6 +781,26 @@ def main() -> None:
         help="Print machine-readable JSON compliance report on stdout",
     )
 
+    cleanup_cmd = sub.add_parser(
+        "cleanup-data",
+        help="Preview or remove artifacts older than retention policy (dry-run unless --apply)",
+    )
+    cleanup_cmd.add_argument(
+        "--repo",
+        default=None,
+        help="Repository root (default: auto-detected project root)",
+    )
+    cleanup_cmd.add_argument(
+        "--apply",
+        action="store_true",
+        help="Delete expired artifacts (default is dry-run only)",
+    )
+    cleanup_cmd.add_argument(
+        "--json",
+        action="store_true",
+        help="Machine-readable candidate list or apply result",
+    )
+
     # serve
     serve_cmd = sub.add_parser(
         "serve",
@@ -829,6 +972,9 @@ def main() -> None:
 
     if args.command == "verify-policy":
         sys.exit(_handle_verify_policy(args))
+
+    if args.command == "cleanup-data":
+        sys.exit(_handle_cleanup_data(args))
 
     if args.command == "eval":
         from .eval.reporter import generate_full_report, generate_readme_tables

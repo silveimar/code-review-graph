@@ -56,6 +56,10 @@ class TestVerifyPolicySuccess:
         assert data.get("compliant") is True
         assert "active_profile" in data
         assert "egress" in data
+        assert "retention" in data
+        ret = data["retention"]
+        assert ret.get("cleanup_command") == "code-review-graph cleanup-data"
+        assert "audit_log_max_age_days" in ret
 
 
 class TestVerifyPolicyFailure:

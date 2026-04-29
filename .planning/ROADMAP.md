@@ -8,7 +8,7 @@ Deliver a hardening-first progression that establishes local policy enforcement 
 
 - [x] **Phase 1: Policy Foundation and Threat Boundaries** - Define centralized local-only policy enforcement.
 - [x] **Phase 2: Data Protection and Access Controls** - Protect local artifacts and runtime access.
-- [ ] **Phase 3: Retention, Deletion, and Operational Safety** - Add lifecycle controls and cleanup guarantees.
+- [x] **Phase 3: Retention, Deletion, and Operational Safety** - Add lifecycle controls and cleanup guarantees.
 - [ ] **Phase 4: Verification and Release Hardening** - Validate and ship hardened-local profile safely.
 
 ## Phase Details
@@ -51,12 +51,12 @@ Plans:
   1. Retention policies can be configured and enforced.
   2. Secure deletion/cleanup workflows remove target artifacts.
   3. Operators have runbook-grade guidance for cleanup verification.
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 03-01: Add retention policy model and enforcement entry points
-- [ ] 03-02: Implement secure deletion and cleanup commands
-- [ ] 03-03: Publish operational safety runbook and checks
+- [x] 03-01: Add retention policy model and enforcement entry points
+- [x] 03-02: Implement secure deletion and cleanup commands
+- [x] 03-03: Publish operational safety runbook and checks
 
 ### Phase 4: Verification and Release Hardening
 **Goal**: Validate full local-only security posture and ship safely.

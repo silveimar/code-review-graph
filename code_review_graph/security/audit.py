@@ -64,6 +64,8 @@ def _scrub_metadata(meta: dict[str, Any] | None) -> dict[str, Any]:
             out[k] = v
         elif k == "path_hint" and isinstance(v, str):
             out[k] = Path(v).name if v else v
+        elif k in {"removed_count", "error_count"} and isinstance(v, str):
+            out[k] = v
     return out
 
 

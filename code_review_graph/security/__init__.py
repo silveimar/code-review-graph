@@ -27,6 +27,7 @@ from .policy_schema import (
     PolicyAction,
     PolicyMode,
     ProtectedDataClass,
+    RetentionPolicy,
 )
 
 __all__ = [
@@ -42,6 +43,7 @@ __all__ = [
     "PolicyAction",
     "PolicyMode",
     "ProtectedDataClass",
+    "RetentionPolicy",
     "PolicyLoadError",
     "artifact_writes_must_encrypt",
     "check_egress",
