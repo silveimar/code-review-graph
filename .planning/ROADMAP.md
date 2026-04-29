@@ -10,6 +10,8 @@ Deliver a hardening-first progression that establishes local policy enforcement 
 - [x] **Phase 2: Data Protection and Access Controls** - Protect local artifacts and runtime access.
 - [x] **Phase 3: Retention, Deletion, and Operational Safety** - Add lifecycle controls and cleanup guarantees.
 - [x] **Phase 4: Verification and Release Hardening** - Validate and ship hardened-local profile safely.
+- [ ] **Phase 5: Retention Phase Formal Verification** - Publish `03-VERIFICATION.md` to close milestone traceability for REQ-05/REQ-06.
+- [ ] **Phase 6: Release Phase Formal Verification** - Publish `04-VERIFICATION.md` to close milestone traceability for Phase 4 requirement rows.
 
 ## Phase Details
 
@@ -72,3 +74,31 @@ Plans:
 - [x] 04-01: Build end-to-end hardening verification suite
 - [x] 04-02: Integrate security regressions into CI gates
 - [x] 04-03: Finalize release hardening checklist and docs
+
+### Phase 5: Retention Phase Formal Verification
+**Goal**: Close audit gap **missing `03-VERIFICATION.md`** — formal execute-phase verification aligned with `03-VALIDATION.md`, summaries, and tests.
+**Depends on**: Phase 3 (substantive work complete)
+**Requirements**: [REQ-05, REQ-06]
+**Gap closure**: Closes requirements marked `verification_status: missing` for Phase 3 in `v1.0-MILESTONE-AUDIT.md`
+**Success Criteria** (what must be TRUE):
+  1. `03-VERIFICATION.md` exists with requirement trace table and PASS/passed outcome.
+  2. Document references automated commands that prove REQ-05 and REQ-06 behaviors.
+**Plans**: TBD
+
+Plans:
+- [ ] 05-01: Author Phase 3 formal verification report (`03-VERIFICATION.md`)
+
+### Phase 6: Release Phase Formal Verification
+**Goal**: Close audit gap **missing `04-VERIFICATION.md`** — consolidate posture tests, docs, and CI narrative for formal milestone sign-off.
+**Depends on**: Phase 4 (substantive work complete)
+**Requirements**: [REQ-01, REQ-02, REQ-03, REQ-04, REQ-07]
+**Gap closure**: Closes Phase 4 rows in audit requirement gaps (formal traceability)
+**Success Criteria** (what must be TRUE):
+  1. `04-VERIFICATION.md` exists linking `tests/test_hardening_posture.py`, `tests/test_phase4_validation.py`, operator docs, CI.
+  2. REQ rows satisfied in three-source sense for milestone re-audit.
+**Plans**: TBD
+
+Plans:
+- [ ] 06-01: Author Phase 4 formal verification report (`04-VERIFICATION.md`)
+
+**Deferred (from milestone audit, low severity):** Optional future work — align `verify-policy` with `cleanup-data` `--repo` semantics for multi-root operators; document unless product priority changes.

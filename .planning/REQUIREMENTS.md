@@ -34,3 +34,19 @@ Improve and secure the project for local use only, protecting analyzed code/cont
 - Introduce central policy guard used by all integration paths.
 - Add cross-platform tests for permissions and secure cleanup.
 - Provide documented fallback controls where native encryption differs.
+
+## Milestone traceability (v1.0 gap closure)
+
+Formal verification artifacts for Phases 3–4 are delivered in **Phase 5** and **Phase 6** (see `.planning/ROADMAP.md`). Status below tracks **documentation sign-off** for `/gsd-audit-milestone`, not substantive implementation (already shipped).
+
+| REQ | Status (formal verification) | Gap closure phase |
+|-----|------------------------------|-------------------|
+| REQ-01 | Pending | Phase 6 |
+| REQ-02 | Pending | Phase 6 |
+| REQ-03 | Pending | Phase 6 |
+| REQ-04 | Pending | Phase 6 |
+| REQ-05 | Pending | Phase 5 |
+| REQ-06 | Pending | Phase 5 |
+| REQ-07 | Pending | Phase 6 |
+
+Update this table when `03-VERIFICATION.md` and `04-VERIFICATION.md` are published and `/gsd-audit-milestone` passes.
