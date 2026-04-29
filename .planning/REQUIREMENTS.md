@@ -41,12 +41,12 @@ Formal verification artifacts for Phases 3–4 are delivered in **Phase 5** and 
 
 | REQ | Status (formal verification) | Gap closure phase |
 |-----|------------------------------|-------------------|
-| REQ-01 | Pending | Phase 6 |
-| REQ-02 | Pending | Phase 6 |
-| REQ-03 | Pending | Phase 6 |
-| REQ-04 | Pending | Phase 6 |
+| REQ-01 | ✓ Signed off (`04-VERIFICATION.md`) | Phase 6 |
+| REQ-02 | ✓ Signed off (`04-VERIFICATION.md`) | Phase 6 |
+| REQ-03 | ✓ Signed off (`04-VERIFICATION.md`) | Phase 6 |
+| REQ-04 | ✓ Signed off (`04-VERIFICATION.md`) | Phase 6 |
 | REQ-05 | ✓ Signed off (`03-VERIFICATION.md`) | Phase 5 |
 | REQ-06 | ✓ Signed off (`03-VERIFICATION.md`) | Phase 5 |
-| REQ-07 | Pending | Phase 6 |
+| REQ-07 | ✓ Signed off (`04-VERIFICATION.md`) | Phase 6 |
 
 Update this table when `03-VERIFICATION.md` and `04-VERIFICATION.md` are published and `/gsd-audit-milestone` passes.

@@ -11,7 +11,7 @@ Deliver a hardening-first progression that establishes local policy enforcement 
 - [x] **Phase 3: Retention, Deletion, and Operational Safety** - Add lifecycle controls and cleanup guarantees.
 - [x] **Phase 4: Verification and Release Hardening** - Validate and ship hardened-local profile safely.
 - [x] **Phase 5: Retention Phase Formal Verification** - Publish `03-VERIFICATION.md` to close milestone traceability for REQ-05/REQ-06.
-- [ ] **Phase 6: Release Phase Formal Verification** - Publish `04-VERIFICATION.md` to close milestone traceability for Phase 4 requirement rows.
+- [x] **Phase 6: Release Phase Formal Verification** - Publish `04-VERIFICATION.md` to close milestone traceability for Phase 4 requirement rows.
 
 ## Phase Details
 
@@ -96,9 +96,9 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. `04-VERIFICATION.md` exists linking `tests/test_hardening_posture.py`, `tests/test_phase4_validation.py`, operator docs, CI.
   2. REQ rows satisfied in three-source sense for milestone re-audit.
-**Plans**: TBD
+**Plans**: 1 plan (complete)
 
 Plans:
-- [ ] 06-01: Author Phase 4 formal verification report (`04-VERIFICATION.md`)
+- [x] 06-01: Author Phase 4 formal verification report (`04-VERIFICATION.md`)
 
 **Deferred (from milestone audit, low severity):** Optional future work — align `verify-policy` with `cleanup-data` `--repo` semantics for multi-root operators; document unless product priority changes.
