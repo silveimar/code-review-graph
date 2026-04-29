@@ -52,7 +52,7 @@ class TestVerifyPolicySuccess:
             capsys,
         )
         assert code == 0
-        data = json.loads(out.strip().splitlines()[-1] if "\n" in out.strip() else out)
+        data = json.loads(out.strip())
         assert data.get("compliant") is True
         assert "active_profile" in data
         assert "egress" in data

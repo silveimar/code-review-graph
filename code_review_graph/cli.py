@@ -11,6 +11,7 @@ Usage:
     code-review-graph visualize
     code-review-graph wiki
     code-review-graph detect-changes [--base BASE] [--brief]
+    code-review-graph verify-policy [--json]
     code-review-graph register <path> [--alias name]
     code-review-graph unregister <path_or_alias>
     code-review-graph repos
@@ -305,6 +306,108 @@ def _handle_init(args: argparse.Namespace) -> None:
     print("  2. Restart your AI coding tool to pick up the new config")
 
 
+def _handle_verify_policy(args: argparse.Namespace) -> int:
+    """Verify effective security policy matches hardened-local expectations (REQ-07).
+
+    Returns exit code ``0`` when compliant, ``1`` when policy is loaded but not hardened,
+    and ``2`` when policy cannot be loaded.
+    """
+    from .security.audit import emit_audit_record
+    from .security.egress_guard import EgressReasonCode, check_egress
+    from .security.policy_loader import PolicyLoadError, resolve_policy_for_profile
+    from .security.policy_schema import PolicyAction, PolicyMode
+
+    profile = os.environ.get("CRG_SECURITY_PROFILE", "standard").strip().lower()
+    cfg = os.environ.get("CRG_SECURITY_POLICY_PATH", "").strip()
+    config_path = Path(cfg) if cfg else None
+    json_mode = getattr(args, "json", False)
+
+    try:
+        policy = resolve_policy_for_profile(profile, config_path=config_path)
+    except PolicyLoadError as exc:
+        emit_audit_record(
+            None,
+            event_type="policy_verify",
+            operation="policy.verify",
+            result="fail",
+            reason="policy_load_error",
+        )
+        err_obj = {
+            "compliant": False,
+            "status": "error",
+            "error": "policy_load_error",
+            "detail": str(exc),
+            "active_profile": profile,
+        }
+        if json_mode:
+            print(json.dumps(err_obj, indent=2))
+        else:
+            print(f"Policy verification: FAIL (could not load policy: {exc})")
+        return 2
+
+    probe = check_egress(
+        policy,
+        operation="embeddings.openai",
+        destination="https://api.openai.com/v1",
+    )
+    egress_guard_ok = (
+        not probe.allowed and probe.reason_code == EgressReasonCode.DENY_CLOUD_HARDENED
+    )
+
+    compliant = (
+        profile == PolicyMode.HARDENED_LOCAL.value
+        and policy.mode == PolicyMode.HARDENED_LOCAL
+        and policy.egress.default_action == PolicyAction.DENY
+        and not policy.egress.allow_cloud_destinations
+        and egress_guard_ok
+    )
+
+    report = {
+        "compliant": compliant,
+        "status": "pass" if compliant else "fail",
+        "active_profile": profile,
+        "policy_mode": policy.mode.value,
+        "egress": {
+            "default_action": policy.egress.default_action.value,
+            "allow_cloud_destinations": policy.egress.allow_cloud_destinations,
+        },
+        "guard_probe": {
+            "sample_operation": "embeddings.openai",
+            "sample_destination": "https://api.openai.com/v1",
+            "denied_as_expected_for_hardened": egress_guard_ok,
+            "reason_code": probe.reason_code,
+        },
+    }
+
+    emit_audit_record(
+        policy,
+        event_type="policy_verify",
+        operation="policy.verify",
+        result="pass" if compliant else "fail",
+        reason="hardened_local_ok" if compliant else "hardened_local_not_met",
+        metadata={"reason_code": report["status"]},
+    )
+
+    if json_mode:
+        print(json.dumps(report, indent=2))
+    else:
+        status_word = "PASS" if compliant else "FAIL"
+        print(f"Policy verification: {status_word}")
+        print(f"  Active profile (env): {profile}")
+        print(f"  Policy mode: {policy.mode.value}")
+        print(f"  Egress default: {policy.egress.default_action.value}")
+        print(
+            "  Cloud egress: "
+            f"{'allowed' if policy.egress.allow_cloud_destinations else 'disabled'}"
+        )
+        print(
+            "  Guard probe (cloud URL denied): "
+            f"{'yes' if egress_guard_ok else 'no'}"
+        )
+
+    return 0 if compliant else 1
+
+
 def _cli_post_process(store: GraphStore) -> None:
     """Run post-build pipeline and print a summary line for each step."""
     from .postprocessing import run_post_processing
@@ -530,6 +633,16 @@ def main() -> None:
     detect_cmd.add_argument("--brief", action="store_true", help="Show brief summary only")
     detect_cmd.add_argument("--repo", default=None, help="Repository root (auto-detected)")
 
+    verify_cmd = sub.add_parser(
+        "verify-policy",
+        help="Verify hardened-local policy compliance (non-zero exit if not hardened)",
+    )
+    verify_cmd.add_argument(
+        "--json",
+        action="store_true",
+        help="Print machine-readable JSON compliance report on stdout",
+    )
+
     # serve
     serve_cmd = sub.add_parser(
         "serve",
@@ -698,6 +811,9 @@ def main() -> None:
         if handler:
             handler(args)
         return
+
+    if args.command == "verify-policy":
+        sys.exit(_handle_verify_policy(args))
 
     if args.command == "eval":
         from .eval.reporter import generate_full_report, generate_readme_tables
