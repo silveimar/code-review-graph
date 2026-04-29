@@ -1,49 +1,74 @@
 # Roadmap: Local-Only Security Hardening
 
-## Phase 1 - Policy Foundation and Threat Boundaries
-**Objective:** Define and implement centralized local-only policy enforcement.
+## Overview
 
-### Deliverables
-- Hardened local profile schema and defaults.
-- Central egress policy guard integrated into outbound integration points.
-- Threat model and policy decision log.
+Deliver a hardening-first progression that establishes local policy enforcement first, then data protection and lifecycle controls, and finally release-grade verification.
 
-### Exit Criteria
-- Policy guard is active in hardened mode.
-- Unit/integration tests validate deny-by-default egress behavior.
+## Phases
 
-## Phase 2 - Data Protection and Access Controls
-**Objective:** Protect local artifacts and restrict unauthorized local access.
+- [ ] **Phase 1: Policy Foundation and Threat Boundaries** - Define centralized local-only policy enforcement.
+- [ ] **Phase 2: Data Protection and Access Controls** - Protect local artifacts and runtime access.
+- [ ] **Phase 3: Retention, Deletion, and Operational Safety** - Add lifecycle controls and cleanup guarantees.
+- [ ] **Phase 4: Verification and Release Hardening** - Validate and ship hardened-local profile safely.
 
-### Deliverables
-- Data-at-rest protection approach for graph/artifacts.
-- Strict permission setup/check tooling.
-- Local audit logging for sensitive operations.
+## Phase Details
 
-### Exit Criteria
-- Permission checks pass on supported environments.
-- Audit events cover defined security-relevant operations.
+### Phase 1: Policy Foundation and Threat Boundaries
+**Goal**: Define and implement centralized local-only policy enforcement.
+**Depends on**: Nothing (first phase)
+**Requirements**: [REQ-01, REQ-02, REQ-06, REQ-07]
+**Success Criteria** (what must be TRUE):
+  1. Hardened local profile exists and is selectable.
+  2. Egress guard fails closed for protected content paths.
+  3. Operators can verify local-only policy status via command/output.
+**Plans**: TBD
 
-## Phase 3 - Retention, Deletion, and Operational Safety
-**Objective:** Add lifecycle controls to minimize residual sensitive data.
+Plans:
+- [ ] 01-01: Add hardened-local configuration profile and policy schema
+- [ ] 01-02: Implement centralized egress guard for outbound integrations
+- [ ] 01-03: Add local policy verification report and audit baseline
 
-### Deliverables
-- Retention policy config and enforcement jobs/commands.
-- Secure deletion and cleanup workflows.
-- Operator guide for local hardening and verification.
+### Phase 2: Data Protection and Access Controls
+**Goal**: Protect local artifacts and restrict unauthorized local access.
+**Depends on**: Phase 1
+**Requirements**: [REQ-03, REQ-04, REQ-06]
+**Success Criteria** (what must be TRUE):
+  1. Local artifacts use documented encryption/protection strategy.
+  2. Access control checks enforce secure file/runtime permissions.
+  3. Audit events are emitted for sensitive operations.
+**Plans**: TBD
 
-### Exit Criteria
-- Retention/deletion tests pass.
-- Documentation includes reproducible verification steps.
+Plans:
+- [ ] 02-01: Implement artifact protection strategy for local data
+- [ ] 02-02: Add permission checks and secure defaults
+- [ ] 02-03: Expand audit logging for protected operations
 
-## Phase 4 - Verification and Release Hardening
-**Objective:** Validate full local-only security posture and ship safely.
+### Phase 3: Retention, Deletion, and Operational Safety
+**Goal**: Add lifecycle controls to minimize residual sensitive data.
+**Depends on**: Phase 2
+**Requirements**: [REQ-05, REQ-06]
+**Success Criteria** (what must be TRUE):
+  1. Retention policies can be configured and enforced.
+  2. Secure deletion/cleanup workflows remove target artifacts.
+  3. Operators have runbook-grade guidance for cleanup verification.
+**Plans**: TBD
 
-### Deliverables
-- End-to-end hardened profile test suite.
-- Security regression checks in CI.
-- Release checklist for hardened-local mode.
+Plans:
+- [ ] 03-01: Add retention policy model and enforcement entry points
+- [ ] 03-02: Implement secure deletion and cleanup commands
+- [ ] 03-03: Publish operational safety runbook and checks
 
-### Exit Criteria
-- All hardening tests green in CI.
-- Release artifacts/documentation approved for local secure usage.
+### Phase 4: Verification and Release Hardening
+**Goal**: Validate full local-only security posture and ship safely.
+**Depends on**: Phase 3
+**Requirements**: [REQ-01, REQ-02, REQ-03, REQ-04, REQ-05, REQ-06, REQ-07]
+**Success Criteria** (what must be TRUE):
+  1. Hardened-local test suite validates all required controls.
+  2. CI includes security regression coverage for hardening features.
+  3. Release checklist confirms readiness for local secure usage.
+**Plans**: TBD
+
+Plans:
+- [ ] 04-01: Build end-to-end hardening verification suite
+- [ ] 04-02: Integrate security regressions into CI gates
+- [ ] 04-03: Finalize release hardening checklist and docs

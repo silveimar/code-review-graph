@@ -4,13 +4,13 @@
 Improve and secure the project for local use only, protecting analyzed code/content through enforceable technical controls.
 
 ## Functional Requirements
-1. System MUST provide a hardened local profile that disables code/content egress by default.
-2. System MUST run core workflows offline (build/update/query/review context) without cloud dependencies.
-3. System MUST protect persisted analysis artifacts using encryption strategy or equivalent documented controls.
-4. System MUST enforce strict local access controls on generated data and runtime artifacts.
-5. System MUST implement retention and secure deletion workflows for analysis data.
-6. System MUST produce local audit traces for security-relevant actions.
-7. System MUST expose a verification path that proves hardened profile is active and policy-compliant.
+- **REQ-01**: System MUST provide a hardened local profile that disables code/content egress by default.
+- **REQ-02**: System MUST run core workflows offline (build/update/query/review context) without cloud dependencies.
+- **REQ-03**: System MUST protect persisted analysis artifacts using encryption strategy or equivalent documented controls.
+- **REQ-04**: System MUST enforce strict local access controls on generated data and runtime artifacts.
+- **REQ-05**: System MUST implement retention and secure deletion workflows for analysis data.
+- **REQ-06**: System MUST produce local audit traces for security-relevant actions.
+- **REQ-07**: System MUST expose a verification path that proves hardened profile is active and policy-compliant.
 
 ## Non-Functional Requirements
 - **Security**: no unapproved outbound transmission of analyzed repository content in hardened profile.
