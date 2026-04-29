@@ -350,6 +350,47 @@ class TestGetProviderMiniMax:
                 get_provider("minimax")
 
 
+class TestHardenedLocalEgressEnforcement:
+    """Hardened-local profile blocks cloud embedding egress before HTTP (REQ-01)."""
+
+    def test_openai_cloud_denied_when_hardened(self):
+        with patch.dict(
+            os.environ,
+            {
+                "CRG_SECURITY_PROFILE": "hardened_local",
+                "CRG_OPENAI_API_KEY": "sk-test",
+                "CRG_OPENAI_BASE_URL": "https://api.openai.com/v1",
+                "CRG_OPENAI_MODEL": "text-embedding-3-small",
+            },
+            clear=False,
+        ):
+            with pytest.raises(PermissionError, match="Egress denied"):
+                get_provider("openai")
+
+    def test_openai_loopback_allowed_when_hardened(self):
+        with patch.dict(
+            os.environ,
+            {
+                "CRG_SECURITY_PROFILE": "hardened_local",
+                "CRG_OPENAI_API_KEY": "sk-test",
+                "CRG_OPENAI_BASE_URL": "http://127.0.0.1:11434/v1",
+                "CRG_OPENAI_MODEL": "text-embedding-3-small",
+            },
+            clear=False,
+        ):
+            p = get_provider("openai")
+            assert p is not None
+
+    def test_minimax_denied_when_hardened(self):
+        with patch.dict(
+            os.environ,
+            {"CRG_SECURITY_PROFILE": "hardened_local", "MINIMAX_API_KEY": "k"},
+            clear=False,
+        ):
+            with pytest.raises(PermissionError, match="Egress denied"):
+                get_provider("minimax")
+
+
 class TestEmbeddingStoreContextManager:
     """Regression tests for #260: EmbeddingStore must support the context
     manager protocol so connections are cleaned up on exception."""

@@ -23,6 +23,13 @@ from typing import Any
 from urllib.parse import urlparse
 
 from .graph import GraphNode, GraphStore, node_to_dict
+from .security.egress_guard import (
+    GOOGLE_GENAI_EGRESS_URL,
+    MINIMAX_EMBEDDINGS_EGRESS_URL,
+    check_egress,
+)
+from .security.policy_loader import PolicyLoadError, resolve_policy_for_profile
+from .security.policy_schema import HardenedPolicy, ProtectedDataClass
 
 logger = logging.getLogger(__name__)
 
@@ -517,6 +524,40 @@ class OpenAIEmbeddingProvider(EmbeddingProvider):
 CLOUD_PROVIDERS = {"google", "minimax", "openai"}
 
 
+def _active_security_policy(explicit: HardenedPolicy | None = None) -> HardenedPolicy:
+    """Resolve policy from explicit argument or CRG_SECURITY_* environment."""
+    if explicit is not None:
+        return explicit
+    profile = os.environ.get("CRG_SECURITY_PROFILE", "standard").strip().lower()
+    cfg = os.environ.get("CRG_SECURITY_POLICY_PATH", "").strip()
+    config_path = Path(cfg) if cfg else None
+    try:
+        return resolve_policy_for_profile(profile, config_path=config_path)
+    except PolicyLoadError as exc:
+        raise PermissionError(
+            "Security policy could not be loaded. Fix CRG_SECURITY_POLICY_PATH "
+            "or unset it to use built-in profile defaults."
+        ) from exc
+
+
+def _enforce_embedding_egress(
+    policy: HardenedPolicy,
+    *,
+    operation: str,
+    destination: str,
+) -> None:
+    decision = check_egress(
+        policy,
+        operation=operation,
+        destination=destination,
+        data_classification=ProtectedDataClass.EMBEDDING_INPUT,
+    )
+    if not decision.allowed:
+        raise PermissionError(
+            f"Egress denied ({decision.reason_code}): {decision.reason}"
+        )
+
+
 def _is_localhost_url(url: str) -> bool:
     """Return True if url points to a localhost host (never treat as cloud egress).
 
@@ -560,6 +601,7 @@ def _warn_cloud_egress(provider_name: str) -> None:
 def get_provider(
     provider: str | None = None,
     model: str | None = None,
+    policy: HardenedPolicy | None = None,
 ) -> EmbeddingProvider | None:
     """Get an embedding provider by name.
 
@@ -578,7 +620,12 @@ def get_provider(
                CRG_EMBEDDING_MODEL env var, then to all-MiniLM-L6-v2.
                For Google provider this is a Gemini model ID.
                For OpenAI provider this overrides CRG_OPENAI_MODEL.
+        policy: Optional resolved :class:`~code_review_graph.security.HardenedPolicy`.
+                When omitted, uses ``CRG_SECURITY_PROFILE`` (default ``standard``)
+                and optional ``CRG_SECURITY_POLICY_PATH``.
     """
+    resolved_policy = _active_security_policy(policy)
+
     if provider == "openai":
         api_key = os.environ.get("CRG_OPENAI_API_KEY")
         base_url = os.environ.get("CRG_OPENAI_BASE_URL")
@@ -599,6 +646,9 @@ def get_provider(
         dimension = int(dim_env) if dim_env else None
         batch_env = os.environ.get("CRG_OPENAI_BATCH_SIZE")
         batch_size = int(batch_env) if batch_env else None
+        _enforce_embedding_egress(
+            resolved_policy, operation="embeddings.openai", destination=base_url,
+        )
         if not _is_localhost_url(base_url):
             _warn_cloud_egress("openai")
         return OpenAIEmbeddingProvider(
@@ -616,6 +666,11 @@ def get_provider(
                 "MINIMAX_API_KEY environment variable is required for "
                 "the MiniMax embedding provider."
             )
+        _enforce_embedding_egress(
+            resolved_policy,
+            operation="embeddings.minimax",
+            destination=MINIMAX_EMBEDDINGS_EGRESS_URL,
+        )
         _warn_cloud_egress("minimax")
         return MiniMaxEmbeddingProvider(api_key=api_key)
 
@@ -626,6 +681,11 @@ def get_provider(
                 "GOOGLE_API_KEY environment variable is required for "
                 "the Google embedding provider."
             )
+        _enforce_embedding_egress(
+            resolved_policy,
+            operation="embeddings.google",
+            destination=GOOGLE_GENAI_EGRESS_URL,
+        )
         _warn_cloud_egress("google")
         try:
             return GoogleEmbeddingProvider(
