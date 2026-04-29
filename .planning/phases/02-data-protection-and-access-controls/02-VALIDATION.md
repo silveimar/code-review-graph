@@ -2,7 +2,10 @@
 phase: 02
 phase_slug: data-protection-and-access-controls
 created: 2026-04-29
-status: pending
+status: complete
+nyquist_compliant: true
+wave_0_complete: true
+last_validated: 2026-04-29
 ---
 
 # Validation Strategy — Phase 02 (Nyquist / Operator Gates)
@@ -43,3 +46,33 @@ status: pending
 ## Post-Execution
 
 - Promote `status: pending` → `active` during execution; set `status: complete` in `02-VERIFICATION.md` (if created) when phase scorecard passes.
+
+## Per-plan verification map
+
+| Plan | REQ focus | Primary automated bundle |
+|------|-----------|-------------------------|
+| 02-01 | REQ-03 | `tests/test_artifact_encryption.py`, `tests/test_graph.py`, `tests/test_wiki.py` |
+| 02-02 | REQ-04 | `tests/test_fs_permissions.py`, `tests/test_incremental.py`, `tests/test_policy_verify.py` |
+| 02-03 | REQ-06 | `tests/test_phase2_audit.py`, `tests/test_policy_audit.py` |
+
+## Validation audit (2026-04-29)
+
+Nyquist audit — Phase 02 bundle executed; **no gaps** (MISSING tests): exit gates satisfied by existing suites.
+
+| Metric | Count |
+|--------|-------|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
+
+**Commands run (green):**
+
+```bash
+uv run pytest tests/test_artifact_encryption.py tests/test_fs_permissions.py \
+  tests/test_phase2_audit.py tests/test_policy_audit.py tests/test_graph.py \
+  tests/test_incremental.py tests/test_wiki.py tests/test_policy_verify.py -q
+```
+
+**Result:** `107 passed`.
+
+**Sign-off:** `nyquist_compliant: true` — REQ-03 / REQ-04 / REQ-06 paths covered by automated verification per dimension coverage above.
