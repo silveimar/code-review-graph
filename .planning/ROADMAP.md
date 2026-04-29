@@ -24,7 +24,7 @@ Deliver a hardening-first progression that establishes local policy enforcement 
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Add hardened-local configuration profile and policy schema
+- [x] 01-01-PLAN.md — Add hardened-local configuration profile and policy schema
 - [ ] 01-02-PLAN.md — Implement centralized egress guard for outbound integrations
 - [ ] 01-03-PLAN.md — Add local policy verification report and audit baseline
 
