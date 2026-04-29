@@ -26,7 +26,7 @@ Deliver a hardening-first progression that establishes local policy enforcement 
 Plans:
 - [x] 01-01-PLAN.md — Add hardened-local configuration profile and policy schema
 - [x] 01-02-PLAN.md — Implement centralized egress guard for outbound integrations
-- [ ] 01-03-PLAN.md — Add local policy verification report and audit baseline
+- [x] 01-03-PLAN.md — Add local policy verification report and audit baseline
 
 ### Phase 2: Data Protection and Access Controls
 **Goal**: Protect local artifacts and restrict unauthorized local access.
