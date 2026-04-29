@@ -777,6 +777,82 @@ class TestBuildPostprocess:
         assert "communities_detected" in result
 
 
+class TestHardenedLocalOfflineCoreWorkflows:
+    """Core graph workflows succeed under hardened-local without cloud credentials (REQ-02)."""
+
+    def setup_method(self):
+        self.tmp = tempfile.mkdtemp()
+        self.root = Path(self.tmp)
+        (self.root / ".git").mkdir()
+        (self.root / "sample.py").write_text(
+            "def hello():\n    pass\n\nclass Foo:\n    pass\n"
+        )
+
+    def teardown_method(self):
+        import shutil
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_build_or_update_graph_succeeds_hardened_local(self, monkeypatch):
+        from unittest.mock import patch
+
+        from code_review_graph.tools.build import build_or_update_graph
+
+        monkeypatch.setenv("CRG_SECURITY_PROFILE", "hardened_local")
+        for key in (
+            "CRG_OPENAI_API_KEY",
+            "GOOGLE_API_KEY",
+            "MINIMAX_API_KEY",
+            "CRG_OPENAI_BASE_URL",
+            "CRG_OPENAI_MODEL",
+        ):
+            monkeypatch.delenv(key, raising=False)
+
+        with patch(
+            "code_review_graph.incremental.get_all_tracked_files",
+            return_value=["sample.py"],
+        ):
+            result = build_or_update_graph(
+                full_rebuild=True,
+                repo_root=str(self.root),
+                postprocess="none",
+            )
+        assert result["status"] == "ok"
+        assert result["total_nodes"] > 0
+
+    def test_get_review_context_after_build_hardened_local(self, monkeypatch):
+        from unittest.mock import patch
+
+        from code_review_graph.tools.build import build_or_update_graph
+        from code_review_graph.tools.review import get_review_context
+
+        monkeypatch.setenv("CRG_SECURITY_PROFILE", "hardened_local")
+        for key in (
+            "CRG_OPENAI_API_KEY",
+            "GOOGLE_API_KEY",
+            "MINIMAX_API_KEY",
+            "CRG_OPENAI_BASE_URL",
+            "CRG_OPENAI_MODEL",
+        ):
+            monkeypatch.delenv(key, raising=False)
+
+        with patch(
+            "code_review_graph.incremental.get_all_tracked_files",
+            return_value=["sample.py"],
+        ):
+            build_or_update_graph(
+                full_rebuild=True,
+                repo_root=str(self.root),
+                postprocess="none",
+            )
+
+        result = get_review_context(
+            changed_files=["sample.py"],
+            repo_root=str(self.root),
+            detail_level="minimal",
+        )
+        assert result["status"] == "ok"
+
+
 class TestComputeSummaries:
     """Tests for _compute_summaries: pins the contents of the three
     summary tables so that the batch-aggregate refactor can't silently

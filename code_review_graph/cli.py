@@ -49,6 +49,14 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+
+def _apply_cli_security_profile(args: argparse.Namespace) -> None:
+    """Apply ``--security-profile`` to the process environment (REQ-02)."""
+    sp = getattr(args, "security_profile", None)
+    if sp:
+        os.environ["CRG_SECURITY_PROFILE"] = sp
+
+
 # Shared platform choices for install and init commands
 _PLATFORM_CHOICES = [
     "codex", "claude", "claude-code", "cursor", "windsurf", "zed",
@@ -319,6 +327,15 @@ def main() -> None:
         description="Persistent incremental knowledge graph for code reviews",
     )
     ap.add_argument("-v", "--version", action="store_true", help="Show version and exit")
+    ap.add_argument(
+        "--security-profile",
+        choices=("hardened_local", "standard"),
+        default=None,
+        help=(
+            "Set CRG_SECURITY_PROFILE for this process (embedding egress / policy). "
+            "When omitted, the environment variable or built-in defaults apply."
+        ),
+    )
     sub = ap.add_subparsers(dest="command")
 
     # install (primary) + init (alias)
@@ -623,6 +640,7 @@ def main() -> None:
     )
 
     args = ap.parse_args()
+    _apply_cli_security_profile(args)
 
     if args.version:
         print(f"code-review-graph {_get_version()}")

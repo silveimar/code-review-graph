@@ -8,11 +8,14 @@ stdio event loop stays responsive during long-running operations.
 
 from __future__ import annotations
 
+import argparse
 import asyncio
 import inspect
+import os
 
 import pytest
 
+from code_review_graph import cli as crg_cli
 from code_review_graph import main as crg_main
 
 
@@ -284,4 +287,20 @@ class TestApplyToolFilter:
         crg_main._apply_tool_filter(" query_graph_tool , semantic_search_nodes_tool ")
         remaining = set((await crg_main.mcp.get_tools()).keys())
         assert remaining == {"query_graph_tool", "semantic_search_nodes_tool"}
+
+
+class TestCliSecurityProfile:
+    """``--security-profile`` exports CRG_SECURITY_PROFILE for embedding policy."""
+
+    def test_apply_cli_security_profile_sets_env(self, monkeypatch):
+        monkeypatch.delenv("CRG_SECURITY_PROFILE", raising=False)
+        args = argparse.Namespace(security_profile="hardened_local")
+        crg_cli._apply_cli_security_profile(args)
+        assert os.environ.get("CRG_SECURITY_PROFILE") == "hardened_local"
+
+    def test_apply_cli_security_profile_noop_when_unset(self, monkeypatch):
+        monkeypatch.setenv("CRG_SECURITY_PROFILE", "standard")
+        args = argparse.Namespace(security_profile=None)
+        crg_cli._apply_cli_security_profile(args)
+        assert os.environ.get("CRG_SECURITY_PROFILE") == "standard"
 
