@@ -9,7 +9,7 @@ Deliver a hardening-first progression that establishes local policy enforcement 
 - [x] **Phase 1: Policy Foundation and Threat Boundaries** - Define centralized local-only policy enforcement.
 - [x] **Phase 2: Data Protection and Access Controls** - Protect local artifacts and runtime access.
 - [x] **Phase 3: Retention, Deletion, and Operational Safety** - Add lifecycle controls and cleanup guarantees.
-- [ ] **Phase 4: Verification and Release Hardening** - Validate and ship hardened-local profile safely.
+- [x] **Phase 4: Verification and Release Hardening** - Validate and ship hardened-local profile safely.
 
 ## Phase Details
 
