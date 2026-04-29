@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from enum import Enum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
 
 
 class PolicyMode(str, Enum):
@@ -27,11 +27,11 @@ class ProtectedDataClass(str, Enum):
 class EgressPolicy(BaseModel):
     """Outbound controls used by runtime integrations."""
 
-    model_config = ConfigDict(extra="forbid", strict=True)
+    model_config = ConfigDict(extra="forbid")
 
     default_action: PolicyAction = PolicyAction.DENY
-    allow_cloud_destinations: bool = False
-    allowed_local_destinations: list[str] = Field(
+    allow_cloud_destinations: StrictBool = False
+    allowed_local_destinations: list[StrictStr] = Field(
         default_factory=lambda: ["127.0.0.1", "localhost", "::1"]
     )
 
@@ -39,17 +39,17 @@ class EgressPolicy(BaseModel):
 class AuditPolicy(BaseModel):
     """Minimal local audit contract for policy-relevant actions."""
 
-    model_config = ConfigDict(extra="forbid", strict=True)
+    model_config = ConfigDict(extra="forbid")
 
-    enabled: bool = True
-    include_reason_codes: bool = True
-    sink: str = "jsonl"
+    enabled: StrictBool = True
+    include_reason_codes: StrictBool = True
+    sink: StrictStr = "jsonl"
 
 
 class HardenedPolicy(BaseModel):
     """Top-level policy contract for local-only hardened behavior."""
 
-    model_config = ConfigDict(extra="forbid", strict=True)
+    model_config = ConfigDict(extra="forbid")
 
     mode: PolicyMode = PolicyMode.HARDENED_LOCAL
     egress: EgressPolicy = Field(default_factory=EgressPolicy)
