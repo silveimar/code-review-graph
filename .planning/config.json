@@ -1,0 +1,18 @@
+{
+  "project_mode": "new-project",
+  "workflow_style": "hardening_first",
+  "research_mode": "broad",
+  "constraints": {
+    "local_only": true,
+    "offline_processing_required": true,
+    "no_cloud_code_content_egress": true,
+    "encrypted_storage_required": true,
+    "access_controls_required": true,
+    "retention_policy_required": true
+  },
+  "quality_gates": {
+    "require_security_tests": true,
+    "require_policy_enforcement_tests": true,
+    "require_docs_update": true
+  }
+}
