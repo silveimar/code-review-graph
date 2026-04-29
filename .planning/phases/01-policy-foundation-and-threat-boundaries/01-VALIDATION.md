@@ -2,7 +2,10 @@
 phase: 01
 phase_slug: policy-foundation-and-threat-boundaries
 created: 2026-04-29
-status: active
+status: complete
+nyquist_compliant: true
+wave_0_complete: true
+last_validated: 2026-04-29
 ---
 
 # Validation Strategy - Phase 01
@@ -35,3 +38,24 @@ status: active
 - At least one test asserts cloud egress denial for protected classes.
 - At least one test asserts offline success for build/update/query/review-context flows.
 - Verification command contract is stable and automation-friendly.
+
+## Validation audit (2026-04-29)
+
+Nyquist pass over Phase 01 bundle; gaps closed:
+
+| Metric | Count |
+|--------|-------|
+| Gaps found | 1 |
+| Resolved | 1 |
+| Escalated | 0 |
+
+**Gap resolved:** `_apply_tool_filter` and `TestApplyToolFilter` referenced removed FastMCP internals (`_tool_manager`). Updated `main.py` to use `await mcp.list_tools(run_middleware=False)` + `mcp.local_provider.remove_tool(name)`, and rewrote tests to avoid nested `asyncio.run` while restoring removed tools via `add_tool`.
+
+**Commands re-verified (green):**
+
+```bash
+uv run pytest tests/test_policy_schema.py tests/test_egress_guard.py tests/test_embeddings.py \
+  tests/test_main.py tests/test_tools.py tests/test_policy_audit.py tests/test_policy_verify.py -q
+```
+
+Result: **202 passed** (same bundle as listed in Commands section above).

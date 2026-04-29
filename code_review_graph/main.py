@@ -942,10 +942,17 @@ def _apply_tool_filter(tools: str | None = None) -> None:
     allowed = {t.strip() for t in raw.split(",") if t.strip()}
     if not allowed:
         return
-    registered = list(mcp._tool_manager._tools.keys())
-    for name in registered:
-        if name not in allowed:
-            mcp.remove_tool(name)
+
+    async def _prune() -> None:
+        registered = [t.name for t in await mcp.list_tools(run_middleware=False)]
+        for name in registered:
+            if name not in allowed:
+                try:
+                    mcp.local_provider.remove_tool(name)
+                except KeyError:
+                    pass
+
+    asyncio.run(_prune())
 
 
 
