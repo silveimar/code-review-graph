@@ -105,6 +105,29 @@ def _parse_destination(destination: str) -> tuple[str | None, EgressDecision | N
     return host.lower(), None
 
 
+def _audit_and_return(
+    policy: HardenedPolicy,
+    operation: str,
+    decision: EgressDecision,
+    destination_host: str | None,
+) -> EgressDecision:
+    """Emit local audit line for egress decision, then return *decision*."""
+    from .audit import emit_audit_record
+
+    meta: dict[str, str | bool] = {"reason_code": decision.reason_code}
+    if destination_host:
+        meta["destination_host"] = destination_host
+    emit_audit_record(
+        policy,
+        event_type="policy_allow" if decision.allowed else "policy_deny",
+        operation=operation.strip(),
+        result="allow" if decision.allowed else "deny",
+        reason=decision.reason_code,
+        metadata=meta,
+    )
+    return decision
+
+
 def check_egress(
     policy: HardenedPolicy,
     *,
@@ -119,24 +142,29 @@ def check_egress(
     """
     _, cls_deny = _normalize_classification(data_classification)
     if cls_deny is not None:
-        return cls_deny
+        return _audit_and_return(policy, operation, cls_deny, None)
 
     op = operation.strip()
     hardened = policy.mode == PolicyMode.HARDENED_LOCAL
 
     if op not in KNOWN_EGRESS_OPERATIONS:
         if hardened:
-            return EgressDecision(
-                allowed=False,
-                reason_code=EgressReasonCode.DENY_UNKNOWN_OPERATION,
-                reason=f"Unknown egress operation: {operation!r}",
+            return _audit_and_return(
+                policy,
+                operation,
+                EgressDecision(
+                    allowed=False,
+                    reason_code=EgressReasonCode.DENY_UNKNOWN_OPERATION,
+                    reason=f"Unknown egress operation: {operation!r}",
+                ),
+                None,
             )
         # Standard mode: allow only after destination validation (still block junk).
         pass
 
     host, parse_deny = _parse_destination(destination)
     if parse_deny is not None:
-        return parse_deny
+        return _audit_and_return(policy, operation, parse_deny, None)
 
     assert host is not None  # parse_deny would be set
 
@@ -144,38 +172,68 @@ def check_egress(
 
     if policy.mode == PolicyMode.STANDARD:
         if local_ok:
-            return EgressDecision(
-                allowed=True,
-                reason_code=EgressReasonCode.ALLOWED_LOCAL_ENDPOINT,
-                reason="Destination is an approved local endpoint",
+            return _audit_and_return(
+                policy,
+                operation,
+                EgressDecision(
+                    allowed=True,
+                    reason_code=EgressReasonCode.ALLOWED_LOCAL_ENDPOINT,
+                    reason="Destination is an approved local endpoint",
+                ),
+                host,
             )
         if policy.egress.allow_cloud_destinations:
-            return EgressDecision(
-                allowed=True,
-                reason_code=EgressReasonCode.ALLOWED_STANDARD_POLICY,
-                reason="Standard profile allows cloud destinations",
+            return _audit_and_return(
+                policy,
+                operation,
+                EgressDecision(
+                    allowed=True,
+                    reason_code=EgressReasonCode.ALLOWED_STANDARD_POLICY,
+                    reason="Standard profile allows cloud destinations",
+                ),
+                host,
             )
-        return EgressDecision(
-            allowed=False,
-            reason_code=EgressReasonCode.DENY_CLOUD_HARDENED,
-            reason="Cloud egress not allowed by egress policy",
+        return _audit_and_return(
+            policy,
+            operation,
+            EgressDecision(
+                allowed=False,
+                reason_code=EgressReasonCode.DENY_CLOUD_HARDENED,
+                reason="Cloud egress not allowed by egress policy",
+            ),
+            host,
         )
 
     # Hardened local
     if local_ok:
-        return EgressDecision(
-            allowed=True,
-            reason_code=EgressReasonCode.ALLOWED_LOCAL_ENDPOINT,
-            reason="Destination is an approved local endpoint",
+        return _audit_and_return(
+            policy,
+            operation,
+            EgressDecision(
+                allowed=True,
+                reason_code=EgressReasonCode.ALLOWED_LOCAL_ENDPOINT,
+                reason="Destination is an approved local endpoint",
+            ),
+            host,
         )
     if policy.egress.allow_cloud_destinations:
-        return EgressDecision(
-            allowed=True,
-            reason_code=EgressReasonCode.ALLOWED_CLOUD_POLICY,
-            reason="Policy explicitly allows cloud destinations",
+        return _audit_and_return(
+            policy,
+            operation,
+            EgressDecision(
+                allowed=True,
+                reason_code=EgressReasonCode.ALLOWED_CLOUD_POLICY,
+                reason="Policy explicitly allows cloud destinations",
+            ),
+            host,
         )
-    return EgressDecision(
-        allowed=False,
-        reason_code=EgressReasonCode.DENY_CLOUD_HARDENED,
-        reason="Hardened local profile denies cloud egress",
+    return _audit_and_return(
+        policy,
+        operation,
+        EgressDecision(
+            allowed=False,
+            reason_code=EgressReasonCode.DENY_CLOUD_HARDENED,
+            reason="Hardened local profile denies cloud egress",
+        ),
+        host,
     )
