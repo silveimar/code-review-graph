@@ -1,6 +1,6 @@
 # Security release checklist (hardened local)
 
-Use this checklist before declaring a release **ready for local secure usage** against `.planning/REQUIREMENTS.md`.
+Use this checklist before declaring a release **ready for local secure usage** against the shipped v1.0 requirements archive (`.planning/milestones/v1.0-REQUIREMENTS.md`). When a new planning milestone adds `.planning/REQUIREMENTS.md`, prefer that file for the latest contract.
 
 **REQ-07** requires an exposed verification path: policy/status checks operators can run (`verify-policy`, JSON contract, automated tests). This doc ties those steps together for releases.
 
@@ -42,5 +42,5 @@ Use this checklist before declaring a release **ready for local secure usage** a
 
 ## References
 
-- Requirements: `.planning/REQUIREMENTS.md` (REQ-01–REQ-07)
-- Roadmap Phase 4: `.planning/ROADMAP.md`
+- Requirements (v1.0): `.planning/milestones/v1.0-REQUIREMENTS.md` (REQ-01–REQ-07)
+- Roadmap: `.planning/ROADMAP.md` (milestone index; v1.0 detail in `milestones/v1.0-ROADMAP.md`)

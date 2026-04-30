@@ -1,6 +1,6 @@
 # CI security regression coverage
 
-This project enforces **local-only hardening** requirements (see `.planning/REQUIREMENTS.md`) through automated checks in GitHub Actions.
+This project enforces **local-only hardening** requirements (see the v1.0 archive `.planning/milestones/v1.0-REQUIREMENTS.md`, or a future live `.planning/REQUIREMENTS.md` when the next milestone is defined) through automated checks in GitHub Actions.
 
 ## Workflow (`.github/workflows/ci.yml`)
 
